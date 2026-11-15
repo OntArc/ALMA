@@ -1,12 +1,10 @@
 # ALMA — Arche of Being: Logically Necessary Metatheoretical Architecture
 
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16707/badge)](https://www.bestpractices.dev/projects/16707)
 [![build](https://img.shields.io/github/actions/workflow/status/OntArc/ALMA/build.yml?branch=main&label=build&logo=github&logoColor=white)](https://github.com/OntArc/ALMA/actions/workflows/build.yml)
 [![Docs Status](https://github.com/OntArc/ALMA/actions/workflows/docs.yml/badge.svg)](https://github.com/OntArc/ALMA/actions/workflows/docs.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/OntArc/ALMA)](https://github.com/OntArc/ALMA/releases)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16707/badge)](https://www.bestpractices.dev/projects/16707)<br>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21511878.svg)](https://doi.org/10.5281/zenodo.21511878)
-![Last Commit](https://img.shields.io/github/last-commit/OntArc/ALMA)
+[![Agda](https://img.shields.io/badge/Agda-2.8.0-blue)](https://agda.readthedocs.io/)
 
 ## Introduction / 简介
 
