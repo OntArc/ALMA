@@ -1,5 +1,6 @@
 # ALMA — Arche of Being: Logically Necessary Metatheoretical Architecture
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16707/badge)](https://www.bestpractices.dev/projects/16707)
 [![build](https://img.shields.io/github/actions/workflow/status/OntArc/ALMA/build.yml?branch=main&label=build&logo=github&logoColor=white)](https://github.com/OntArc/ALMA/actions/workflows/build.yml)
 [![Docs Status](https://github.com/OntArc/ALMA/actions/workflows/docs.yml/badge.svg)](https://github.com/OntArc/ALMA/actions/workflows/docs.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/OntArc/ALMA)](https://github.com/OntArc/ALMA/releases)
