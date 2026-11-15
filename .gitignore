@@ -1,6 +1,7 @@
 _build/
 _probe/
-docs/
+docs/*.html
+docs/*.css
 *.agdai
 src/index.agda
 src/Everything.agda
