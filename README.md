@@ -1,8 +1,11 @@
 # ALMA — Arche of Being: Logically Necessary Metatheoretical Architecture
 
-[![build](https://img.shields.io/github/actions/workflow/status/Ontarch/ALMA/build.yml?branch=main&label=build&logo=github&logoColor=white)](https://github.com/Ontarch/ALMA/actions/workflows/build.yml)
-[![Docs Status](https://github.com/Ontarch/ALMA/actions/workflows/docs.yml/badge.svg)](https://github.com/Ontarch/ALMA/actions/workflows/docs.yml)
+[![build](https://img.shields.io/github/actions/workflow/status/OntArc/ALMA/build.yml?branch=main&label=build&logo=github&logoColor=white)](https://github.com/OntArc/ALMA/actions/workflows/build.yml)
+[![Docs Status](https://github.com/OntArc/ALMA/actions/workflows/docs.yml/badge.svg)](https://github.com/OntArc/ALMA/actions/workflows/docs.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/OntArc/ALMA)](https://github.com/OntArc/ALMA/releases)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21511878.svg)](https://doi.org/10.5281/zenodo.21511878)
+![Last Commit](https://img.shields.io/github/last-commit/OntArc/ALMA)
 
 ## Introduction / 简介
 
@@ -49,7 +52,7 @@ Equivalence/ 层在观察等价层面呈现了同一收敛模式：所有的退�
 ### Build / 构建
 
 ```bash
-git clone https://github.com/Ontarch/ALMA.git
+git clone https://github.com/OntArc/ALMA.git
 cd ALMA
 agda -i src src/Everything.agda
 ```

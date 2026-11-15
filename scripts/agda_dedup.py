@@ -1076,6 +1076,206 @@ def block_decls(src_dirs, filters):
     return out
 
 
+# ---------------------------------------------------------------- where 块
+
+SHELL_KW = ('private', 'abstract', 'instance')
+
+
+def where_block_ranges(lines):
+    """产出 where 块的 (块头行下标, 块体起, 块体止, 块体列)。
+
+    `where` 属于它上面那条子句，块体是 `where` 之后缩进更深的部分；块在遇到顶格行、
+    或缩进回落到 `where` 自身缩进之下时结束。块体列取块内非空非注释行的最小缩进
+    （与 `mod_block_ranges` 同口径），所以 `private` / `abstract` 这类壳不会把同级列算歪。
+    """
+    n = len(lines)
+    for h in range(n):
+        if lines[h].strip() != 'where':
+            continue
+        wind = len(lines[h]) - len(lines[h].lstrip())
+        end = h + 1
+        while end < n:
+            t = lines[end]
+            if not t.strip():
+                end += 1
+                continue
+            ind = len(t) - len(t.lstrip())
+            if ind == 0 or ind < wind:
+                break
+            end += 1
+        col = None
+        for t in lines[h + 1:end]:
+            if t.strip() and not t.lstrip().startswith('--'):
+                ind = len(t) - len(t.lstrip())
+                if col is None or ind < col:
+                    col = ind
+        if col:
+            yield h, h + 1, end, col
+
+
+def _where_name(b):
+    """块体一行开头的名字：声明 `x :` 或定义 `x … =`。判断不出就 None。"""
+    m = DECL.match(b)
+    if m:
+        return m.group(1)
+    if '=' not in b:
+        return None
+    head = b.split('=', 1)[0].strip()
+    if not head or head.startswith(('_', '(', '{', '...')):
+        return None
+    t = head.split()[0]
+    return t if (IDENT.match(t) or t.startswith('_')) else None
+
+
+def _is_shell(b):
+    """`private` / `abstract` / `instance` 单独一行：它下面那批才是真条目。"""
+    return b.split()[0] in SHELL_KW and '=' not in b and ':' not in b
+
+
+def _block_items(lines, s0, s1, col):
+    """块内按列 col 的条目行，返回 [(行下标, 该条目的列)]；壳里的条目递归进去。
+
+    递归是必要的：`private` 下面的 `read-cl` 与 `top-read` 是同级声明，不进去就只收
+    到壳本身，而且外层条目的体还会一路吞过壳（`top-read` 被吞成半个 where 块，
+    真副本会被判成"体不同"）。
+    """
+    out, k = [], s0
+    while k < s1:
+        s = lines[k]
+        if not s.strip():
+            k += 1
+            continue
+        ind = len(s) - len(s.lstrip())
+        if ind != col:
+            k += 1
+            continue
+        b = s.lstrip()
+        if _is_shell(b):
+            j, sub = k + 1, None
+            while j < s1:
+                t = lines[j]
+                if not t.strip():
+                    j += 1
+                    continue
+                if len(t) - len(t.lstrip()) < col + 1:
+                    break
+                j += 1
+            for t in lines[k + 1:j]:
+                if t.strip() and not t.lstrip().startswith('--'):
+                    ii = len(t) - len(t.lstrip())
+                    if sub is None or ii < sub:
+                        sub = ii
+            if sub:
+                out.extend(_block_items(lines, k + 1, j, sub))
+            k = j
+            continue
+        if b.startswith(('--', '(', '{', '...')):
+            k += 1
+            continue
+        out.append((k, col))
+        k += 1
+    return out
+
+
+def _nested_body(lines, idx, name, col, end):
+    """块内一条声明的体：从声明行到下一个同级新条目，或到块尾。
+
+    不能用 `decl_body`：它按"顶格才算新声明"截断，块内声明下面全是缩进行，
+    会把后面几个同级条目一起吞进来，导致两边的体永远"不同"。
+    """
+    out = [lines[idx]]
+    for k in range(idx + 1, min(end, len(lines))):
+        s = lines[k]
+        if not s.strip():
+            out.append(s)
+            continue
+        ind = len(s) - len(s.lstrip())
+        if ind < col:
+            break
+        if ind == col:
+            b = s.lstrip()
+            if _is_shell(b):
+                break
+            nm = _where_name(b)
+            if nm and nm != name:
+                break
+        out.append(s)
+    return norm_txt('\n'.join(out)).replace(name, '\x00NAME')
+
+
+def where_block_decls(src_dirs, filters):
+    """收 where 块内与块体同级的声明，并记下该块的局部名表。
+
+    局部名表用在 `nested_pairs` 的遮蔽检查上：where 里的类型会引用块内局部定义
+    （`0ℚ < w0` 的 `w0`），两边同名不同义时字面可以完全一样、命题却不同。
+    返回 (声明列表, 块数)。
+    """
+    out, nblocks = [], 0
+    for root in src_dirs:
+        for p in list_agda_files(root, filters):
+            rel = os.path.relpath(p, root)
+            lines = read_src(p)
+            for h, s0, s1, col in where_block_ranges(lines):
+                nblocks += 1
+                items = _block_items(lines, s0, s1, col)
+                local = {}
+                for k, c in items:
+                    b = lines[k].lstrip()
+                    if ':' in b.split('=', 1)[0]:
+                        continue          # 声明行留给下面的循环
+                    nm = _where_name(b)
+                    if nm and nm not in KEY:
+                        local.setdefault(nm, _nested_body(lines, k, nm, c, s1))
+                for k, c in items:
+                    b = lines[k].lstrip()
+                    mt = DECL.match(b)
+                    if not (mt and mt.group(1) not in KEY):
+                        continue
+                    name = mt.group(1)
+                    typ = lines[k].split(':', 1)[1].strip()
+                    if not typ:
+                        continue
+                    body = _nested_body(lines, k, name, c, s1)
+                    local[name] = body
+                    out.append(dict(file=rel, name=name, line=k + 1, typ=typ,
+                                    body=body, kind='where', locals=local,
+                                    block='%s:%d' % (rel, h + 1)))
+    return out, nblocks
+
+
+def nested_pairs(nds, src_dirs, prop_re):
+    """where 块声明的文本档配对，附一道局部名遮蔽检查。
+
+    只认类型文本归一后完全相同——与 `module _` 那档同口径（按 shape 配会造出一片假
+    候选）。遮蔽检查只在两侧定义体不同时生效：真副本（体逐字相同）不因局部名可疑被丢，
+    因为它本来就是同一个东西抄了两遍。
+
+    返回 (配对列表, 被遮蔽挡下的列表)。
+    """
+    by = collections.defaultdict(list)
+    for d in nds:
+        if prop_re.search(d['typ']) and len(d['typ']) > 6:
+            by[norm_txt(d['typ'])].append(d)
+    out, shadowed = [], []
+    for g in by.values():
+        for a, b in itertools.combinations(g, 2):
+            if a['block'] == b['block']:
+                continue
+            same = a['body'] == b['body']
+            if not same:
+                toks = set(re.findall(r'[A-Za-z_\u2080-\u2089\u2032][A-Za-z0-9_\u2080-\u2089\u2032]*',
+                                      a['typ']))
+                la, lb = a.get('locals', {}), b.get('locals', {})
+                conflict = [t for t in sorted(toks)
+                            if t in la and t in lb and la[t] != lb[t]]
+                if conflict:
+                    shadowed.append((a, b, conflict))
+                    continue
+            out.append((a, b, same))
+    return out, shadowed
+
+
+
 def note_coverage(ind, top, top_prop=None):
     """`module _` 体内还有一批同级引理没纳入时提示一句。
 
@@ -1159,6 +1359,24 @@ def cmd_scan(args, ctx):
         print('  [块] %s @ %s:%d  <->  %s @ %s:%d  %s'
               % (a['name'], a['file'], a['line'], b['name'], b['file'], b['line'],
                  '类型与定义体都相同' if same else '类型相同、定义体不同'))
+    nst = None
+    if getattr(args, 'nested', False):
+        wds, wblocks = where_block_decls(ctx['src'], args.filter)
+        wpr, wshadow = nested_pairs(wds, ctx['src'], ctx['prop'])
+        wprop = sum(1 for d in wds if ctx['prop'].search(d['typ']))
+        nst = dict(blocks=wblocks, decls=len(wds), prop=wprop,
+                   pairs=len(wpr), shadowed=len(wshadow))
+        print('nested  where/模块体块 %d 个，同级声明 %d 条（命题型 %d），'
+              '文本相同配对 %d，被局部名遮蔽挡下 %d'
+              % (wblocks, len(wds), wprop, len(wpr), len(wshadow)))
+        for a, b, same in wpr[:args.show]:
+            print('  [where] %s @ %s:%d  <->  %s @ %s:%d  %s'
+                  % (a['name'], a['file'], a['line'], b['name'], b['file'], b['line'],
+                     '类型与定义体都相同' if same else '类型相同、定义体不同'))
+        for a, b, cn in wshadow[:3]:
+            print('  [where:遮蔽] %s @ %s:%d  <->  %s @ %s:%d  局部名 %s 两侧定义不同'
+                  % (a['name'], a['file'], a['line'], b['name'], b['file'], b['line'],
+                     '/'.join(cn)))
     for k, (a, b) in enumerate(cands[:args.show], 1):
         print('  [%d] %s @ %s:%d  <->  %s @ %s:%d'
               % (k, a['name'], a['file'], a['line'], b['name'], b['file'], b['line']))
@@ -1181,6 +1399,10 @@ def cmd_scan(args, ctx):
                   pairs=len(cands), groups=len(groups),
                   indented=ind[0], indented_prop=ind[1],
                   all_types=len(copies))
+    if nst is not None:
+        report.update(nested_blocks=nst['blocks'], nested_decls=nst['decls'],
+                      nested_prop=nst['prop'], nested_pairs=nst['pairs'],
+                      nested_shadowed=nst['shadowed'])
     return report, [dict(a=x, b=y) for x, y in cands]
 
 
@@ -1561,6 +1783,10 @@ def main(argv=None):
             sp.add_argument('--all-types', action='store_true',
                             help='补一档文本比对：非命题型（数据/函数定义，探针判不了）里'
                                  '"同名跨文件 + 定义体逐字相同"的纯副本。不进编译，秒级')
+            sp.add_argument('--nested', action='store_true',
+                            help='补 where 块内同级声明（默认不收）：只出文本档证据，'
+                                 '不进探针；类型相同但块内局部名两侧定义不同时会被遮蔽'
+                                 '检查挡下，不配对')
         if name == 'l2':
             sp.add_argument('--cases', required=True, help='用例 JSON（见 使用说明.md）')
             sp.add_argument('--imports', help='覆盖默认 import 块，用 \\n 分行')

@@ -138,6 +138,30 @@ all-types 非命题型 744 条，同名跨文件组 36，定义体逐字相同 9
 
 这一档只说明"定义体逐字相同（纯副本）"，同一函数的不同写法看不出；删之前先看调用点。
 
+**`--nested`：把 where 块里的同级声明也收进来。** 默认只扫顶格声明和 `module _` 同级
+声明；`where` 里的一条都不进候选、也不统计，属于静默漏报。ALMA 上最典型的漏报是
+`Cosmos/Carried/LimitSystem.agda` 与 `LimitSystemS.agda`：后者的整个 where 块前者的副本。
+
+```bash
+agda-dedup scan --root . --nested --show 10
+```
+
+```
+nested  where/模块体块 375 个，同级声明 1257 条（命题型 700），文本相同配对 9，被局部名遮蔽挡下 5
+  [where] up-toℕ @ Cosmos/Carried/LimitSystem.agda:213  <->  up-toℕ @ Cosmos/Carried/LimitSystemS.agda:115  类型与定义体都相同
+  [where] inj-clamp @ Cosmos/Carried/LimitSystem.agda:217  <->  inj-clamp @ Cosmos/Carried/LimitSystemS.agda:119  类型与定义体都相同
+  [where] top-read @ Cosmos/Carried/LimitSystem.agda:232  <->  top-read @ Cosmos/Carried/LimitSystemS.agda:134  类型与定义体都相同
+  [where:遮蔽] w0>0 @ Real/Interval/Order.agda:198  <->  0<w0 @ Real/Interval/OrderLaws.agda:71  局部名 w0 两侧定义不同
+```
+
+口径与 `module _` 那档一致：只认类型文本归一后完全相同，仍不进探针（where 里的类型带块内
+局部名，探针写不出来）。`private` / `abstract` / `instance` 壳里的声明一并收，壳本身不算条目。块头 `where` 独占一行的具名模块体（`module X (参数…) where` 换行写的那种）也算一个块，所以 375 个块里有一部分是模块体；具名模块的成员在旧口径里同样一条都看不见。
+
+遮蔽检查是这一档的必需品。`0ℚ < w0` 在两个块里字面完全相同，`w0` 却是各自 where 的局部
+定义（一侧 `u y 0 - l y 0`，一侧 `width r 0`），命题并不相同；不做这一步，5 组配对里 4 组是
+假候选。定义体逐字相同的那几对不受遮蔽检查影响——它们本来就是同一个东西抄了两遍。
+
+
 **只扫 Real 层**（历史报告的同口径）：
 
 ```bash
@@ -436,6 +460,7 @@ record 字段名、`field` 块里的名字不在这张表里，所以 304 比历
 | `--max-cases` | 空 | 只跑前 N 个候选，用来快速验通路 |
 | `--cross-file` | `skip` | 仅 `l1`：`skip` 时跨文件候选不编译，走 `CROSS_NAME / SHAPE / SCOPE / TYPE / COPY` 文本比对；`try` 强制搭探针（结果不可信） |
 | `--all-types` | 关 | 仅 `scan`：补一档非命题型的文本比对（"同名跨文件 + 定义体逐字相同"，见 3.1 末尾）。不进编译，0.5 s |
+| `--nested` | 关 | 仅 `scan`：补 where 块内同级声明（文本档，不进编译）。`private` / `abstract` / `instance` 壳里的一并收；类型相同但块内局部名两侧定义不同会被遮蔽检查挡下，不配对 |
 | `--out` | 空 | 落 `{"report": {...}, "cases": [...]}` 结构 JSON；`report.elapsed` 是本次耗时（秒，一位小数），终端也会打一行 `耗时 X.XX s` |
 
 计时落在 `report.elapsed` 而不是只打印：CI 里日志会被截断、混排，"这次比上次慢多少"
