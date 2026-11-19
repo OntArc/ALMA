@@ -20,14 +20,14 @@ open import Data.Sum using (inj₁; inj₂)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; cong; sym; trans; subst; subst₂)
 
-open import Base.RationalRing using (neg-involutive)
+open import Base.RationalRing using (neg-involutive; lt-add)
 open import Real.IntervalEquiv using (node; l; u; l-mono; u-mono)
 open import Real.Interval using (δ; RealI; embedℚ)
 open import Real.Interval.Arith using (_-ℝ_; negℝ)
 open import Real.Interval.Continuity using (Close; sub-add-cancel)
 open import Real.Interval.ContinuityMul using
-  (u-sub-emb; l-add-emb; budget-<; sub-cancel-<; shift-inside; shift-bound
-  ; sub-left-≤; node-diff-up; node-diff-down)
+  (u-sub-emb; l-add-emb; budget-<; shift-inside; shift-bound; sub-left-≤
+  ; node-diff-up; node-diff-down)
 open import Real.Interval.OrderLe using (sub-mono)
 open import Real.Interval.Mul.Core using (abs-≤)
 open import Real.Interval.Node using (u-hom; u-neg; l-dyadic)
@@ -54,15 +54,15 @@ abs-from a C lo hi with ∣p∣≡p∨∣p∣≡-p a
 --
 -- 最浅层区间界住所有更深层的端点
 
--- Every endpoint of x is bounded in absolute value by the shallowest
+-- Every endpoint of x is bounded-window in absolute value by the shallowest
 -- bound.
 --
 -- x 的每个端点都被最浅层的界界住绝对值。
-bounded :
+bounded-window :
   (x : RealI) →
   Σ ℚ (λ M → 0ℚ ≤ M ×
     (∀ m a → l x m ≤ a → a ≤ u x m → ∣ a ∣ ≤ M))
-bounded x =
+bounded-window x =
   let L = l x 0
       U = u x 0
       M = ∣ L ∣ ⊔ ∣ U ∣
@@ -102,7 +102,7 @@ close-left d x x' h =
   let n , w = proj₁ h
 
       h₁ : u x n + δ n < l x' n + d
-      h₁ = sub-cancel-< (u x n + δ n) (l x' n) d
+      h₁ = lt-add (u x n + δ n) (l x' n) d
              (subst (λ z → z < l x' n) (u-sub-emb x d n) w)
 
       s : u x n + neg (l x' n) < d + neg (δ n)

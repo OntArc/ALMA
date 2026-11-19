@@ -18,13 +18,14 @@ open import Data.Rational.Properties using
   ; p⊓q≤q)
 open import Relation.Binary.PropositionalEquality using (sym; subst)
 
+open import Base.RationalRing using (lt-shift)
 open import Real using (ε; half)
 open import Real.IntervalEquiv using (l; l-mono)
 open import Real.Interval using (RealI; δ)
 open import Real.Interval.Arith using (0ℝ)
 open import Real.Interval.Continuity using (Close; Close-self; close-mono)
 open import Real.Interval.ContinuityClose using (close-endpoint-bounds)
-open import Real.Interval.ContinuityMul using (addle-cancel-<; cancel-add-<)
+open import Real.Interval.ContinuityMul using (addle-cancel-<)
 open import Real.Interval.ContinuityRecipBasic using (l-near-lower; pos-meet)
 open import Real.Interval.ContinuityRecipQuota using (half-mul-<)
 open import Real.Interval.OrderLe using (sub-mono)
@@ -96,7 +97,7 @@ pos-of-close r x x' 0<x r<m cl =
                      (addle-cancel-< r c (δ n₀) r<m)
 
       δ<c-r : δ n₀ < c - r
-      δ<c-r = cancel-add-< (δ n₀) c r δr<c
+      δ<c-r = lt-shift (δ n₀) c r δr<c
 
       bd = close-endpoint-bounds r x x' cl
       q  = proj₁ bd

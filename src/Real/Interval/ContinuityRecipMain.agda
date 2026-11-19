@@ -25,7 +25,7 @@ open import Data.Sum using (inj₁; inj₂)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; sym; subst; cong; trans)
 
-open import Base.RationalRing using (neg-involutive; neg-0)
+open import Base.RationalRing using (neg-involutive; neg-0; lt-add; lt-shift)
 open import Real using (CauchySeq; ε; half; embed)
 open import Real.CauchyToInterval using
   (M; K; K≥k; μ≤M; centre-cauchy→realI; node-go)
@@ -35,12 +35,11 @@ open import Real.Interval using (RealI; δ; δ-pos)
 open import Real.Interval.Arith using (0ℝ)
 open import Real.Interval.Continuity using (Close; sub-add-cancel)
 open import Real.Interval.ContinuityMul using
-  (u-sub-emb; l-add-emb; close-levels; sub-cancel-<; sub-left-<; cancel-add-<
-  ; sub-left-≤)
+  (u-sub-emb; l-add-emb; close-levels; sub-left-<; sub-left-≤)
 open import Real.Interval.ContinuityClose using (close-endpoint-bounds)
 open import Real.Interval.ContinuityProdGap using (within)
 open import Real.Interval.ContinuityRecipBasic using
-  (Bsq-index; recip-modulus-grow; gap-c; neg-sub; sub-add-right; add-left
+  (Bsq-index; recip-modulus-grow; gap-c; sub-neg-trans; sub-add-right; add-left
   ; centre-gap-upper; centre-gap-lower; centre-cross-upper; centre-cross-lower
   ; width-near; u-shift-upper)
 open import Real.Interval.ContinuityProdBudget using (width-pos)
@@ -138,7 +137,7 @@ u-move-of-close :
 u-move-of-close d x x' h =
   let m , w₁ , w₂ = close-levels d x x' h
       s₁ : u x m + δ m < l x' m + d
-      s₁ = sub-cancel-< (u x m + δ m) (l x' m) d
+      s₁ = lt-add (u x m + δ m) (l x' m) d
              (subst (λ z → z < l x' m) (u-sub-emb x d m) w₁)
       c₁ : u x m < l x' m + d
       c₁ = ≤-<-trans (le-plus (u x m) (δ m) (<⇒≤ (δ-pos m))) s₁
@@ -205,7 +204,7 @@ u-gap-deep d x x' h =
             up : u x k ≤ u x' k + d
             up = sub-left-≤ (u x k) (u x' k) d (proj₂ w)
             dn₀ : u x' k - d ≤ u x k
-            dn₀ = neg-sub (u x k) (u x' k) d (proj₁ w)
+            dn₀ = sub-neg-trans (u x k) (u x' k) d (proj₁ w)
             dn₁ : (u x' k - d) + d ≤ u x k + d
             dn₁ = +-mono-≤ {x = u x' k - d} {y = u x k} {u = d} {v = d} dn₀ ≤-refl
             dn : u x' k ≤ u x k + d
@@ -543,7 +542,7 @@ gap-sum-left a b s e E le gap =
       h7 : (a + (s + s)) + s < b + e
       h7 = subst (λ z → z < b + e) (sym (+-assoc a (s + s) s)) h6
       h8 : a + (s + s) < (b + e) - s
-      h8 = cancel-add-< (a + (s + s)) (b + e) s h7
+      h8 = lt-shift (a + (s + s)) (b + e) s h7
   in subst (λ z → z < (b - s) + e) (sym (+-assoc a s s))
            (subst (λ z → a + (s + s) < z) (sym (swap b (- s) e)) h8)
 
@@ -568,11 +567,11 @@ gap-sum-right a b s e E le gap =
       h7 : (b + (s + s)) + s < a + e
       h7 = subst (λ z → z < a + e) (sym (+-assoc b (s + s) s)) h6
       h8 : b + (s + s) < (a + e) - s
-      h8 = cancel-add-< (b + (s + s)) (a + e) s h7
+      h8 = lt-shift (b + (s + s)) (a + e) s h7
       h9 : (b + s) + s < (a + e) - s
       h9 = subst (λ z → z < (a + e) - s) (sym (+-assoc b s s)) h8
       h10 : b + s < ((a + e) - s) - s
-      h10 = cancel-add-< (b + s) ((a + e) - s) s h9
+      h10 = lt-shift (b + s) ((a + e) - s) s h9
       eqA : ((a + (- s)) + (- s)) + e ≡ ((a + (- s)) + e) + (- s)
       eqA = swap (a + (- s)) (- s) e
       eqB : ((a + (- s)) + e) + (- s) ≡ ((a + e) + (- s)) + (- s)

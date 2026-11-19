@@ -20,7 +20,7 @@ open ≡-Reasoning
 
 open import Real using (embed)
 open import Real.Interval using (RealI; dyadic)
-open import Real.Interval.Rational using (sub-add; neg-sub)
+open import Real.Interval.Rational using (sub-add; neg-sub-neg)
 
 ------------------------------------------------------------------------
 -- Division distributes over addition
@@ -150,10 +150,10 @@ RealI.nest (negℝ x) = nest1 , nest2 , nest3
         a' = RealI.l (RealI.next x); b' = RealI.u (RealI.next x)
 
         w-eq  : neg a  - neg b  ≡ b  - a
-        w-eq  = neg-sub a b
+        w-eq  = neg-sub-neg a b
 
         w'-eq : neg a' - neg b' ≡ b' - a'
-        w'-eq = neg-sub a' b'
+        w'-eq = neg-sub-neg a' b'
 
         inner : b' - a' ≤ (b - a) ÷ embed 2
         inner = proj₂ (proj₂ (RealI.nest x))

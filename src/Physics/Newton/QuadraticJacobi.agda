@@ -33,13 +33,13 @@ open import Reflection
 open import Tactic.RingSolver using (solve-macro)
 
 open import Physics.Newton.Quadratic using
-  (Obs; obs; bracket; add; neg; zero; qO; pO; twoℚ; mkObs)
+  (Obs; obs; quad-bracket; quad-add; quad-neg; quad-zero; qO; pO; twoℚ; mkObs)
 
 ------------------------------------------------------------------------
 -- Normalising ring-solver entry
 --
 -- The standard reflective solver only weak-head-reduces the goal, so a
--- coefficient hidden behind a nested bracket, a componentwise add or a
+-- coefficient hidden behind a nested quad-bracket, a componentwise quad-add or a
 -- record projection is seen as an opaque constant. We normalise the
 -- equation fully, open a fresh metavariable of that normalised type and
 -- hand it to the ℚ ring solver. No type transport is ever used.
@@ -64,7 +64,7 @@ macro
 -- Self-bracket
 --
 -- {f, f} = 0. Each coefficient is a ring expression that is its own
--- negative and hence zero over ℚ (characteristic zero); the ring solver
+-- negative and hence quad-zero over ℚ (characteristic quad-zero); the ring solver
 -- discharges all six fields uniformly.
 --
 -- 自括号
@@ -72,7 +72,7 @@ macro
 -- {f, f} = 0。每个系数都是与其负值相等的环表达式，在 ℚ（特征零）上为
 -- 零；环求解器统一消去全部六个字段。
 
-bracket-self : ∀ f → bracket f f ≡ zero
+bracket-self : ∀ f → quad-bracket f f ≡ quad-zero
 bracket-self (obs _ a b d e f) =
   mkObs
     (solveℚ (a ∷ b ∷ d ∷ e ∷ f ∷ []))
@@ -98,9 +98,9 @@ bracket-self (obs _ a b d e f) =
 -- 个非常数坐标上的全称多项式，由环求解器闭合。
 
 jacobi : ∀ f g h →
-         add (add (bracket (bracket f g) h)
-                  (bracket (bracket g h) f))
-             (bracket (bracket h f) g) ≡ zero
+         quad-add (quad-add (quad-bracket (quad-bracket f g) h)
+                  (quad-bracket (quad-bracket g h) f))
+             (quad-bracket (quad-bracket h f) g) ≡ quad-zero
 jacobi (obs _ a b d e f)
        (obs _ a' b' d' e' f')
        (obs _ a″ b″ d″ e″ f″) =
@@ -136,10 +136,10 @@ halfℚ = 1ℤ / 2
 -- 2 · (1/2) = 1; the square derivative factor cancels the denominator.
 --
 -- 2·(1/2) = 1；平方求导的因子与分母相消。
-double-half : twoℚ * halfℚ ≡ 1ℚ
-double-half = refl
+double-half-coeff : twoℚ * halfℚ ≡ 1ℚ
+double-half-coeff = refl
 
--- H = (q² + p²) / 2: d = f = 1/2, all other coordinates zero.
+-- H = (q² + p²) / 2: d = f = 1/2, all other coordinates quad-zero.
 --
 -- H = (q² + p²)/2：取 d = f = 1/2，其余坐标为零。
 H-harmonic : Obs
@@ -149,18 +149,18 @@ H-harmonic = obs 0ℚ 0ℚ 0ℚ halfℚ 0ℚ halfℚ
 --
 -- 哈密顿向量场 X_H u = {u, H}。
 X : Obs → Obs → Obs
-X H u = bracket u H
+X H u = quad-bracket u H
 
 -- q̇ = {q, H} = p.
 harmonic-qdot : X H-harmonic qO ≡ pO
 harmonic-qdot = refl
 
 -- ṗ = {p, H} = −q.
-harmonic-pdot : X H-harmonic pO ≡ neg qO
+harmonic-pdot : X H-harmonic pO ≡ quad-neg qO
 harmonic-pdot = refl
 
 -- Energy is conserved along its own flow: {H, H} = 0.
 --
 -- 能量沿自身流守恒：{H, H} = 0。
-harmonic-energy : X H-harmonic H-harmonic ≡ zero
+harmonic-energy : X H-harmonic H-harmonic ≡ quad-zero
 harmonic-energy = bracket-self H-harmonic

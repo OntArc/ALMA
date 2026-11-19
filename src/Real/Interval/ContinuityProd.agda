@@ -31,7 +31,7 @@ open import Real.Interval using (RealI; δ)
 open import Real.Interval.Continuity using (Close; ContinuousAt₂; Continuous₂)
 open import Real.Interval.ContinuityMul using (sub-right-≤)
 open import Real.Interval.ContinuityClose using
-  (bounded; shift-abs; abs-diff-bounds; close-endpoint-bounds)
+  (bounded-window; shift-abs; abs-diff-bounds; close-endpoint-bounds)
 open import Real.Interval.ContinuityProdGap using
   (prod-node-bound; within; prod-gap-term; left-gap; right-gap)
 open import Real.Interval.ContinuityProdBudget using
@@ -215,35 +215,35 @@ module MultiplicationModulus (x y : RealI) (k : ℕ) where
   h₁₂ : ε j₂ + ε j₂ ≡ ε j₁
   h₁₂ = ε-half j₁
 
-  -- The shallowest bound on x from `bounded`.
+  -- The shallowest bound on x from `bounded-window`.
   --
-  -- 由 `bounded` 得到的最浅层 x 界。
+  -- 由 `bounded-window` 得到的最浅层 x 界。
   Mx₀ : ℚ
-  Mx₀ = proj₁ (bounded x)
+  Mx₀ = proj₁ (bounded-window x)
 
   0≤Mx₀ : 0ℚ ≤ Mx₀
-  0≤Mx₀ = proj₁ (proj₂ (bounded x))
+  0≤Mx₀ = proj₁ (proj₂ (bounded-window x))
 
-  -- Every endpoint of x is bounded in absolute value by Mx₀.
+  -- Every endpoint of x is bounded-window in absolute value by Mx₀.
   --
   -- x 的每个端点都被 Mx₀ 界住绝对值。
   bx : ∀ m a → l x m ≤ a → a ≤ u x m → ∣ a ∣ ≤ Mx₀
-  bx = proj₂ (proj₂ (bounded x))
+  bx = proj₂ (proj₂ (bounded-window x))
 
-  -- The shallowest bound on y from `bounded`.
+  -- The shallowest bound on y from `bounded-window`.
   --
-  -- 由 `bounded` 得到的最浅层 y 界。
+  -- 由 `bounded-window` 得到的最浅层 y 界。
   My₀ : ℚ
-  My₀ = proj₁ (bounded y)
+  My₀ = proj₁ (bounded-window y)
 
   0≤My₀ : 0ℚ ≤ My₀
-  0≤My₀ = proj₁ (proj₂ (bounded y))
+  0≤My₀ = proj₁ (proj₂ (bounded-window y))
 
-  -- Every endpoint of y is bounded in absolute value by My₀.
+  -- Every endpoint of y is bounded-window in absolute value by My₀.
   --
   -- y 的每个端点都被 My₀ 界住绝对值。
   by : ∀ m a → l y m ≤ a → a ≤ u y m → ∣ a ∣ ≤ My₀
-  by = proj₂ (proj₂ (bounded y))
+  by = proj₂ (proj₂ (bounded-window y))
 
   -- The relaxed endpoint bound for x, after the d-shift.
   --

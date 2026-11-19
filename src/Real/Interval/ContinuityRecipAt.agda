@@ -26,6 +26,7 @@ open +-*-Solver
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; sym; trans; cong; subst)
 
+open import Base.RationalRing using (lt-add)
 open import Real using
   (ε; embed; half; CauchySeq; 0<ε; 0<embed; embed-suc-pos ; embed-mono-≤)
 open import Real.CauchyToInterval using (M; M-mono)
@@ -34,13 +35,12 @@ open import Real.IntervalEquiv using
 open import Real.Interval using (RealI; δ; δ-pos)
 open import Real.Interval.Arith using (0ℝ)
 open import Real.Interval.Continuity using (Close)
-open import Real.Interval.ContinuityMul using (sub-cancel-<)
 open import Real.Interval.ContinuityProd using (abs-diff-flip)
 open import Real.Interval.ContinuityProdGap using (within)
 open import Real.Interval.ContinuityRecipBasic using
   (gap-c; close-abs; l-near-lower)
 open import Real.Interval.ContinuityRecipBudget using
-  (0<3; 0<inv; 0<mul; coef3; width-small)
+  (0<3; 0<inv; 0<mul; coef3; width-small-quant)
 open import Real.Interval.ContinuityRecipDeep using (deep-both)
 open import Real.Interval.ContinuityRecipMain using
   (inv; sample-deep; pos-deep; sample-level; sample-level-low; close-recip
@@ -107,7 +107,7 @@ at-hyp a b s e r ab≤r r3<e =
       s1 = subst (λ z → z < e) (sym (group3 a b s)) l1
       h1 : (a + s) + s < (b - s) + e
       h1 = subst (λ z → (a + s) + s < z) (+-comm e (b - s))
-             (sub-cancel-< ((a + s) + s) e (b - s) s1)
+             (lt-add ((a + s) + s) e (b - s) s1)
       m2 : (b - a) + ((s + s) + s) ≤ r + ((s + s) + s)
       m2 = +-mono-≤ ba≤ ≤-refl
       l2 : (b - a) + ((s + s) + s) < e
@@ -116,7 +116,7 @@ at-hyp a b s e r ab≤r r3<e =
       s2 = subst (λ z → z < e) (sym (group3' a b s)) l2
       h2 : (b + s) < ((a - s) - s) + e
       h2 = subst (λ z → b + s < z) (+-comm e ((a - s) - s))
-             (sub-cancel-< (b + s) e ((a - s) - s) s2)
+             (lt-add (b + s) e ((a - s) - s) s2)
   in h1 , h2
 
 ------------------------------------------------------------------------
@@ -328,7 +328,7 @@ recip-close-at x 0<x k =
         smallL : recip2^t L < q
         smallL = proj₁ (db L tδ≤L)
         widthL : width x L ≤ W
-        widthL = width-small x B L q w0≤B 0≤B smallL
+        widthL = width-small-quant x B L q w0≤B 0≤B smallL
         hwj : width x j ≤ W
         hwj = ≤-trans (width-dec x L≤j) widthL
         hwj' : width x j' ≤ W

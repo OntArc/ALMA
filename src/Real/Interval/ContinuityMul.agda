@@ -15,7 +15,7 @@ open import Data.Rational using
   (ℚ; 0ℚ; _+_; _-_; _<_; _≤_; _⊓_; _⊔_; _*_; ∣_∣; nonNegative)
   renaming (-_ to neg)
 open import Data.Rational.Properties using
-  (+-assoc; +-comm; +-identityʳ; +-inverseʳ ; +-monoˡ-<; +-mono-≤; ≤-refl
+  (+-assoc; +-comm; +-identityʳ ; +-monoˡ-<; +-mono-≤; ≤-refl
   ; ≤-trans; <⇒≤; ≤-<-trans; <-≤-trans ; neg-antimono-≤; neg-distrib-+; ⊓-glb
   ; ⊔-lub; p⊓q≤p; p⊓q≤q ; p≤p⊔q; p≤q⊔p; ∣p*q∣≡∣p∣*∣q∣; *-monoʳ-≤-nonNeg
   ; *-monoˡ-≤-nonNeg ; 0≤∣p∣; *-comm)
@@ -23,7 +23,8 @@ open import Relation.Binary.PropositionalEquality using
   (_≡_; cong; sym; trans; subst; module ≡-Reasoning)
 open ≡-Reasoning
 
-open import Base.RationalRing using (neg-involutive; neg-0)
+open import Base.RationalRing using
+  (neg-involutive; neg-0; lt-shift; sub-sum-swap; lt-add; lt-sub)
 open import Real.IntervalEquiv using (l; u; l-mono; u-mono)
 open import Real.Interval using (RealI; embedℚ; δ; δ-pos)
 open import Real.Interval.Arith using (_+ℝ_; _-ℝ_; negℝ)
@@ -39,36 +40,6 @@ open import Real.Interval.Rational using (r≤|r|; negsub)
 --
 -- 有理数记账
 
--- Adding then subtracting the same term yields the original.
---
--- 加上 b 后再减去 b，结果归约为原值。
-add-sub-cancel : (a b : ℚ) → (a + b) + neg b ≡ a
-add-sub-cancel a b = begin
-  (a + b) + neg b
-    ≡⟨ +-assoc a b (neg b) ⟩
-  a + (b + neg b)
-    ≡⟨ cong (a +_) (+-inverseʳ b) ⟩
-  a + 0ℚ
-    ≡⟨ +-identityʳ a ⟩
-  a
-    ∎
-
--- Adding then subtracting the leading term yields the trailing term.
---
--- 由 b + c 减去首项 b，结果归约为 c。
-sandwich-right : (b c : ℚ) → (b + c) + neg b ≡ c
-sandwich-right b c = begin
-  (b + c) + neg b
-    ≡⟨ cong (_+ neg b) (+-comm b c) ⟩
-  (c + b) + neg b
-    ≡⟨ +-assoc c b (neg b) ⟩
-  c + (b + neg b)
-    ≡⟨ cong (c +_) (+-inverseʳ b) ⟩
-  c + 0ℚ
-    ≡⟨ +-identityʳ c ⟩
-  c
-    ∎
-
 -- Swapping associativity to move the middle term to the end.
 --
 -- 交换结合次序，把中间项移位到末尾。
@@ -83,13 +54,6 @@ shift-inside b d e = begin
   (b + d) + neg e
     ∎
 
--- Moving a subtraction out of a strict bound.
---
--- 由左侧已减去 c 的严格界，得到右侧加上 c 的严格界。
-sub-cancel-< : (a b c : ℚ) → a - c < b → a < b + c
-sub-cancel-< a b c h =
-  subst (λ z → z < b + c) (sub-add-cancel a c) (+-monoˡ-< c h)
-
 -- Moving a subtraction out of a strict bound (additive form).
 --
 -- 由右侧已减去 c 的严格界，得到左侧加上 c 的严格界。
@@ -97,19 +61,14 @@ addle-cancel-< : (a b c : ℚ) → a < b - c → a + c < b
 addle-cancel-< a b c h =
   subst (λ z → a + c < z) (sub-add-cancel b c) (+-monoˡ-< c h)
 
--- Moving an addition across a strict bound.
---
--- 把左侧的加项移到右侧并变号。
-cancel-add-< : (a b c : ℚ) → a + c < b → a < b - c
-cancel-add-< a b c h =
-  subst (λ z → z < b + neg c) (add-sub-cancel a c) (+-monoˡ-< (neg c) h)
-
 -- Moving a subtraction across a strict bound.
 --
 -- 把左侧的减项移到不等式另一侧。
+--
+-- Reduced to Base.RationalRing.lt-sub after commuting the two summands.
+-- 交换两个加项后化归到 Base.RationalRing.lt-sub。
 sub-left-< : (a b c : ℚ) → a < b + c → a - b < c
-sub-left-< a b c h =
-  subst (λ z → a + neg b < z) (sandwich-right b c) (+-monoˡ-< (neg b) h)
+sub-left-< a b c h = lt-sub a c b (subst (λ z → a < z) (+-comm b c) h)
 
 -- Budget rule: flip the addends across a strict bound.
 --
@@ -117,7 +76,7 @@ sub-left-< a b c h =
 budget-< : (a b d e : ℚ) → a + e < b + d → a - b < d - e
 budget-< a b d e p =
   let q : a < b + (d - e)
-      q = subst (λ z → a < z) (+-assoc b d (neg e)) (cancel-add-< a (b + d) e p)
+      q = subst (λ z → a < z) (+-assoc b d (neg e)) (lt-shift a (b + d) e p)
   in sub-left-< a b (d - e) q
 
 -- Weakening: subtracting a nonnegative amount makes the result smaller.
@@ -192,7 +151,7 @@ node-diff-up d x x' m h k p a a' lx≤a a≤ux lx'≤a' a'≤ux' =
       h' = subst (λ z → z < l x' m) (u-sub-emb x d m) h
 
       s₁ : u x m + δ m < l x' m + d
-      s₁ = sub-cancel-< (u x m + δ m) (l x' m) d h'
+      s₁ = lt-add (u x m + δ m) (l x' m) d h'
 
       s₂ : u x m - l x' m < d - δ m
       s₂ = budget-< (u x m) (l x' m) d (δ m) s₁
@@ -288,7 +247,7 @@ minus-shift : (a b e : ℚ) → a ≤ b + e → a - e ≤ b
 minus-shift a b e h =
   let step : (b + e) + neg e ≤ b
       step = subst (λ z → z ≤ b)
-               (sym (trans (cong (_+ neg e) (+-comm b e)) (sandwich-right e b)))
+               (sym (trans (cong (_+ neg e) (+-comm b e)) (sub-sum-swap e b)))
                (≤-refl {b})
   in ≤-trans (+-mono-≤ h (≤-refl {neg e})) step
 
@@ -317,7 +276,7 @@ shift-bound a b e h = minus-shift a b e (sub-left-≤ a b e h)
 -- 把右侧的加项 e 移到左侧变成减项。
 le-shift-sub : (a b e : ℚ) → a ≤ b + e → a - b ≤ e
 le-shift-sub a b e h =
-  subst (λ z → a - b ≤ z) (sandwich-right b e)
+  subst (λ z → a - b ≤ z) (sub-sum-swap b e)
     (sub-mono {a = a} {a' = b + e} {b = b} {b' = b} h (≤-refl {b}))
 
 ------------------------------------------------------------------------

@@ -34,7 +34,7 @@ open ≡-Reasoning
 open import Relation.Nullary.Negation using (¬_)
 open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
 
-open import Base.RationalRing using (neg-involutive; +interchange)
+open import Base.RationalRing using (neg-involutive; sub-add-split)
 open import Real.Interval.Reasoning using (begin≤_; _≈⟨_⟩_; _≤⟨_⟩_; _≤∎)
 
 ------------------------------------------------------------------------
@@ -64,13 +64,7 @@ pos-diff a b a<b =
 -- neg-sub 翻转差。
 
 sub-add : (a b c d : ℚ) → (a + b) - (c + d) ≡ (a - c) + (b - d)
-sub-add a b c d = begin
-  (a + b) - (c + d)
-    ≡⟨ cong (λ z → (a + b) + z) (neg-distrib-+ c d) ⟩
-  (a + b) + (neg c + neg d)
-    ≡⟨ +interchange a b (neg c) (neg d) ⟩
-  (a - c) + (b - d)
-  ∎
+sub-add a b c d = sub-add-split a c b d
 
 -- (x + y) − (x + z) ≡ y − z。
 --
@@ -113,8 +107,8 @@ negsub x y = begin
   y - x
   ∎
 
-neg-sub : ∀ a b → neg a - neg b ≡ b - a
-neg-sub a b = begin
+neg-sub-neg : ∀ a b → neg a - neg b ≡ b - a
+neg-sub-neg a b = begin
   neg a - neg b
     ≡⟨ refl ⟩
   neg a + neg (neg b)

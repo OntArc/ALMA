@@ -233,21 +233,19 @@ UnitProcess : Process (⊤ {0ℓ}) (⊤ {0ℓ})
 UnitProcess = mkStandardProcess (⊤ {0ℓ}) (⊤ {0ℓ}) (tt {0ℓ}) (tt {0ℓ})
 assoc-iso-O : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} → ((A × B) × C) → (A × (B × C))
 assoc-iso-O ((a , b) , c) = (a , (b , c))
-assoc-iso-C : ∀ {ℓ₁ ℓ₂ ℓ₃} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃} → ((A × B) × C) → (A × (B × C))
-assoc-iso-C ((a , b) , c) = (a , (b , c))
 merge-stream-assoc : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
                      {O₁ : Set ℓ₁} {C₁ : Set ℓ₂} {O₂ : Set ℓ₃} {C₂ : Set ℓ₄} {O₃ : Set ℓ₅} {C₃ : Set ℓ₆}
                      (s₁ : Stream (O₁ × C₁)) (s₂ : Stream (O₂ × C₂)) (s₃ : Stream (O₃ × C₃))
                      → ≈-hetero {ℓ₁ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆} {ℓ₂ = ℓ₁ ⊔ ℓ₂ ⊔ ℓ₃ ⊔ ℓ₄ ⊔ ℓ₅ ⊔ ℓ₆}
                                 (merge-stream (merge-stream s₁ s₂) s₃)
                                 (merge-stream s₁ (merge-stream s₂ s₃))
-                                (comb assoc-iso-O assoc-iso-C)
+                                (comb assoc-iso-O assoc-iso-O)
 merge-stream-assoc s₁ s₂ s₃ .head≈ = refl
 merge-stream-assoc s₁ s₂ s₃ .tail≈ = merge-stream-assoc (Stream.tail s₁) (Stream.tail s₂) (Stream.tail s₃)
 ⊗-assoc-hetero : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆}
                  {O₁ : Set ℓ₁} {C₁ : Set ℓ₂} {O₂ : Set ℓ₃} {C₂ : Set ℓ₄} {O₃ : Set ℓ₅} {C₃ : Set ℓ₆}
                  (p₁ : Process O₁ C₁) (p₂ : Process O₂ C₂) (p₃ : Process O₃ C₃)
-                 → ≈ₚ-hetero ((p₁ ⊗ p₂) ⊗ p₃) (p₁ ⊗ (p₂ ⊗ p₃)) assoc-iso-O assoc-iso-C
+                 → ≈ₚ-hetero ((p₁ ⊗ p₂) ⊗ p₃) (p₁ ⊗ (p₂ ⊗ p₃)) assoc-iso-O assoc-iso-O
 ⊗-assoc-hetero p₁ p₂ p₃ .stream≈ = merge-stream-assoc (stream p₁) (stream p₂) (stream p₃)
 left-unit-O : ∀ {ℓ⊤ ℓO} {O : Set ℓO} → (⊤ {ℓ⊤} × O) → O
 left-unit-O (tt , o) = o
@@ -368,11 +366,11 @@ pentagon-theorem : ∀ {ℓ₁ ℓ₂ ℓ₃ ℓ₄ ℓ₅ ℓ₆ ℓ₇ ℓ₈}
                       (((p₁ ⊗ p₂) ⊗ p₃) ⊗ p₄)
                       (p₁ ⊗ (p₂ ⊗ (p₃ ⊗ p₄)))
                       (assoc-iso-O ∘ assoc-iso-O)
-                      (assoc-iso-C ∘ assoc-iso-C)
+                      (assoc-iso-O ∘ assoc-iso-O)
 pentagon-theorem p₁ p₂ p₃ p₄ .stream≈ =
   ≈-hetero-trans
-    (comb assoc-iso-O assoc-iso-C)
-    (comb assoc-iso-O assoc-iso-C)
+    (comb assoc-iso-O assoc-iso-O)
+    (comb assoc-iso-O assoc-iso-O)
     (stream (((p₁ ⊗ p₂) ⊗ p₃) ⊗ p₄))
     (stream ((p₁ ⊗ p₂) ⊗ (p₃ ⊗ p₄)))
     (stream (p₁ ⊗ (p₂ ⊗ (p₃ ⊗ p₄))))
@@ -429,22 +427,17 @@ Alive≢Faded eq = subst P eq (tt {0ℓ})
   P Alive = ⊤ {0ℓ}
   P Faded = ⊥ {0ℓ}
   P Broken = ⊤ {0ℓ}
+P-not-Broken : CoherenceStage → Set 0ℓ
+P-not-Broken Alive = ⊤ {0ℓ}
+P-not-Broken Faded = ⊤ {0ℓ}
+P-not-Broken Broken = ⊥ {0ℓ}
+
 Alive≢Broken : Alive ≢ Broken
-Alive≢Broken eq = subst P eq (tt {0ℓ})
-  where
-  P : CoherenceStage → Set 0ℓ
-  P Alive = ⊤ {0ℓ}
-  P Faded = ⊤ {0ℓ}
-  P Broken = ⊥ {0ℓ}
+Alive≢Broken eq = subst P-not-Broken eq (tt {0ℓ})
 Faded≢Alive : Faded ≢ Alive
 Faded≢Alive = Alive≢Faded ∘ sym
 Faded≢Broken : Faded ≢ Broken
-Faded≢Broken eq = subst P eq (tt {0ℓ})
-  where
-  P : CoherenceStage → Set 0ℓ
-  P Alive = ⊤ {0ℓ}
-  P Faded = ⊤ {0ℓ}
-  P Broken = ⊥ {0ℓ}
+Faded≢Broken eq = subst P-not-Broken eq (tt {0ℓ})
 Broken≢Alive : Broken ≢ Alive
 Broken≢Alive = Alive≢Broken ∘ sym
 Broken≢Faded : Broken ≢ Faded

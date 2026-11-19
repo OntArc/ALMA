@@ -31,7 +31,7 @@ open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; cong; cong₂; sym; trans; subst; module ≡-Reasoning)
 open ≡-Reasoning
 
-open import Base.RationalRing using (+interchange; neg-involutive)
+open import Base.RationalRing using (+interchange; neg-involutive; neg-sub)
 open import Real using (embed; half; 2ℚ≡1+1)
 open import Real.Interval using (RealI; δ; δ-pos; dyadic)
 open import Real.Interval.Arith using (0ℝ; _+ℝ_; negℝ)
@@ -851,18 +851,6 @@ abs-centre-even l u l≤u =
                   d' : (B - ∣ c ∣) + (∣ c ∣ - A) ≤ w + w
                   d' = +-mono-≤ t1' t2'
               in ≤-trans k' d'
-
-            neg-sub : (a b : ℚ) → neg (a - b) ≡ b - a
-            neg-sub a b =
-              begin
-                neg (a - b)
-                  ≡⟨ neg-distrib-+ a (neg b) ⟩
-                neg a + neg (neg b)
-                  ≡⟨ cong (neg a +_) (neg-involutive b) ⟩
-                neg a + b
-                  ≡⟨ +-comm (neg a) b ⟩
-                b + neg a
-                  ∎
 
             sAbs : ∣ A - B ∣ ≤ w + w
             sAbs = case_of_ {B = ∣ A - B ∣ ≤ w + w}

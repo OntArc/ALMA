@@ -5,6 +5,7 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16707/badge)](https://www.bestpractices.dev/projects/16707)<br>
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21511878.svg)](https://doi.org/10.5281/zenodo.21511878)
 [![Agda](https://img.shields.io/badge/Agda-2.8.0-blue)](https://agda.readthedocs.io/)
+[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://ontarc.zulipchat.com/)
 
 ## Introduction / 简介
 

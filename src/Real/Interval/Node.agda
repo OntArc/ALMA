@@ -25,7 +25,7 @@ open import Real.IntervalEquiv using
   (node; l; u; centre; width; width-n; 0<width; recipPow2)
 open import Real using (embed; 2ℚ; 2ℚ≡1+1; embed2-nonZero; half)
 open import Real.Interval using (RealI; dyadic; δ)
-open import Real.Interval.Arith using (0ℝ; 1ℝ; _+ℝ_; negℝ; div-add)
+open import Real.Interval.Arith using (0ℝ; 1ℝ; _+ℝ_; _-ℝ_; negℝ; div-add)
 open import Real.Interval.Mul using (_*ℝ_)
 open import Real.Interval.Rational using (sub-add)
 open import Real.Interval.Kit using
@@ -57,11 +57,29 @@ node-dyadic q k (suc n) =
     dyadic q (k +ℕ suc n)
   ∎
 
-l-dyadic : (q : ℚ) (n : ℕ) → l (dyadic q 0) n ≡ neg (δ n) + q
-l-dyadic q n = cong RealI.l (node-dyadic q 0 n)
+-- node of a dyadic interval at general depth, lower endpoint.
+--
+-- dyadic 区间一般深度节点的下端点。
+l-dyadic-k : (q : ℚ) (k n : ℕ) → l (dyadic q k) n ≡ neg (δ (k +ℕ n)) + q
+l-dyadic-k q k n = cong RealI.l (node-dyadic q k n)
 
+-- Lower endpoint, the depth-zero case of l-dyadic-k.
+--
+-- 下端点，即 l-dyadic-k 的零深度特例。
+l-dyadic : (q : ℚ) (n : ℕ) → l (dyadic q 0) n ≡ neg (δ n) + q
+l-dyadic q n = l-dyadic-k q 0 n
+
+-- node of a dyadic interval at general depth, upper endpoint.
+--
+-- dyadic 区间一般深度节点的上端点。
+u-dyadic-k : (q : ℚ) (k n : ℕ) → u (dyadic q k) n ≡ δ (k +ℕ n) + q
+u-dyadic-k q k n = cong RealI.u (node-dyadic q k n)
+
+-- Upper endpoint, the depth-zero case of u-dyadic-k.
+--
+-- 上端点，即 u-dyadic-k 的零深度特例。
 u-dyadic : (q : ℚ) (n : ℕ) → u (dyadic q 0) n ≡ δ n + q
-u-dyadic q n = cong RealI.u (node-dyadic q 0 n)
+u-dyadic q n = u-dyadic-k q 0 n
 
 ------------------------------------------------------------------------
 -- node commutes with +ℝ
@@ -136,6 +154,17 @@ centre-neg x n =
       ≡⟨ refl ⟩
     neg (centre x n)
       ∎
+
+
+centre-sub : (x y : RealI) (n : ℕ) →
+  centre (x -ℝ y) n ≡ centre x n - centre y n
+centre-sub x y n = begin
+  centre (x -ℝ y) n
+    ≡⟨ centre-add x (negℝ y) n ⟩
+  centre x n + centre (negℝ y) n
+    ≡⟨ cong (centre x n +_) (centre-neg y n) ⟩
+  centre x n + neg (centre y n)
+    ∎
 
 ------------------------------------------------------------------------
 -- centre of 0ℝ and 1ℝ

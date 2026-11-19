@@ -13,7 +13,6 @@ open import Data.Nat using (zero; suc; _∸_; _^_; s≤s; z≤n)
 open import Data.Nat.Properties using (m≤n+m; m+[n∸m]≡n)
   renaming (≤-trans to ≤N-trans)
 open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
-open import Data.Sum using (_⊎_)
 open import Data.Rational using
   (ℚ; 0ℚ; 1ℚ; _+_; _-_; _*_; _<_; _≤_; NonNegative; positive)
 open import Data.Rational.Base using (-_)
@@ -23,6 +22,7 @@ open import Data.Rational.Properties using
   ; +-identityʳ; pos⇒nonNeg; *-monoʳ-≤-nonNeg; *-monoˡ-≤-nonNeg; neg-antimono-≤
   ; +-monoˡ-≤; pos*pos⇒pos; positive⁻¹)
   renaming (+-inverseʳ to +-invʳ; +-inverseˡ to +-invˡ)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; cong; cong₂; sym; trans; subst; subst₂; module ≡-Reasoning)
 open ≡-Reasoning
@@ -38,7 +38,7 @@ open import Real.Interval.OrderLaws using (width-below)
 open import Real.Interval.Node using (u-dyadic; l-dyadic)
 open import Real.Interval.Kit using
   (recip-antitone; 0<half; 0≤half; half+half≡1; n≤2n; recipPow2-mul)
-open import Real.Interval.Order using (_<ℝ_)
+open import Real.Interval.Order using (_<ℝ_; <-cotrans)
 open import Real.Interval.Rational using (pos-diff)
 
 ------------------------------------------------------------------------
@@ -54,6 +54,17 @@ infix 4 _≤ℝ_
 
 _≤ℝ_ : RealI → RealI → Set
 x ≤ℝ y = ¬ (y <ℝ x)
+
+------------------------------------------------------------------------
+-- Transitivity
+--
+-- 传递性
+
+≤ℝ-trans : {x y z : RealI} → x ≤ℝ y → y ≤ℝ z → x ≤ℝ z
+≤ℝ-trans {x} {y} {z} x≤y y≤z z<x
+  with <-cotrans {y = y} z<x
+...  | inj₁ z<y = y≤z z<y
+...  | inj₂ y<x = x≤y y<x
 
 ------------------------------------------------------------------------
 -- Rational order and arithmetic lemmas

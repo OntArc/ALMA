@@ -19,11 +19,11 @@ open import Real.Interval.Arith using (negℝ)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym; ≈ℝ-refl; ≈ℝ-trans)
 open import Real.Interval.Order using (_<ℝ_)
 open import Real.Interval.OrderComplete.Base using
-  (Subset; Located; Upper; Occupied; _≤ℝ_)
+  (Subset; Located; Upper; Occupied; ≤ℝ-trans; _≤ℝ_)
 open import Real.Interval.OrderComplete using (order-complete)
 open import Real.Interval.OrderLaws using (≈-<-resp; <-neg)
 open import Real.Interval.Mul.Order using (≈-<-respʳ; ≈-neg)
-open import Real.Interval.OrderLe using (≤ℝ-trans; ≈⇒≤ℝ; ≤ℝ-resp-≈)
+open import Real.Interval.OrderLe using (≈⇒≤ℝ; ≤ℝ-resp-≈)
 open import Real.Interval.ArithLaws using (negℝ-negℝ)
 open import Real.Interval.Embed using (embedℚ-neg)
 

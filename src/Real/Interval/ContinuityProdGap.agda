@@ -18,15 +18,15 @@ open import Data.Rational.Properties using
   ; ≤-<-trans)
 open import Relation.Binary.PropositionalEquality using (_≡_; sym; cong; subst)
 
-open import Base.RationalRing using (neg-involutive)
+open import Base.RationalRing using (neg-involutive; lt-shift)
 open import Real using (ε)
 open import Real.IntervalEquiv using (node; l; u)
 open import Real.Interval using (RealI; embedℚ; δ)
 open import Real.Interval.Arith using (_+ℝ_; _-ℝ_)
 open import Real.Interval.Continuity using (Close)
 open import Real.Interval.ContinuityMul using
-  (u-sub-emb; l-add-emb; shift-inside; cancel-add-<; sub-left-<; min4; max4
-  ; width4; min4-shift; max-gap; sub-left-≤; prod-diff-one)
+  (u-sub-emb; l-add-emb; shift-inside; sub-left-<; min4; max4; width4
+  ; min4-shift; max-gap; sub-left-≤; prod-diff-one)
 open import Real.Interval.ContinuityClose using (close-endpoint-bounds)
 open import Real.Interval.Kit using (n≤2n)
 open import Real.Interval.Mul using (_*ℝ_)
@@ -421,7 +421,7 @@ right-gap x x' y y' k n G' hg hgap =
               (+-monoʳ-< lA hg)
 
       body : uB < (lA + d) - dn
-      body = cancel-add-< uB (lA + d) dn big
+      body = lt-shift uB (lA + d) dn big
 
       goal : uB < lA - dn + d
       goal = subst (λ z → uB < z) (sym (shift-inside lA d dn)) body

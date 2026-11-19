@@ -24,7 +24,7 @@ open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
 open import Real using (embed)
 open import Real.Interval using (RealI; double-half)
 open import Real.IntervalEquiv using (mono-half)
-open import Real.Interval.Rational using (neg-sub)
+open import Real.Interval.Rational using (neg-sub-neg)
 open import Real.Interval.Kit using (0≤diff)
 open import Real.Interval.Reasoning using
   (begin≤_; begin<_; _≤∎; _≈⟨_⟩_; _≤⟨_⟩_; _<⟨_⟩≤[_])
@@ -122,7 +122,7 @@ abs-width-neg {l} {u} l≤u u≤0 =
     absHi l u - absLo l u
   ≡⟨ cong₂ _-_ (hi-neg l≤u u≤0) (lo-neg l≤u u≤0) ⟩
     neg l - neg u
-  ≡⟨ neg-sub l u ⟩
+  ≡⟨ neg-sub-neg l u ⟩
     u - l
   ∎
 

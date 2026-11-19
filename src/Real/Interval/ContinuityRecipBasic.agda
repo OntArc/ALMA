@@ -8,6 +8,8 @@
 
 module Real.Interval.ContinuityRecipBasic where
 
+open import Real.Interval.OrderComplete using (half-pos)
+
 open import Data.Empty using (⊥-elim)
 open import Data.Nat using (ℕ; suc) renaming (_*_ to _*ℕ_; _≤_ to _≤ℕ_)
 open import Data.Nat.Properties as ℕP using (n≤1+n)
@@ -62,8 +64,8 @@ open import Real.Interval.Reasoning using (begin≤_; _≈⟨_⟩_; _≤⟨_⟩_
 -- Moving a negated subtraction to the other side.
 --
 -- 把取负后的减项移到另一侧。
-neg-sub : (a b d : ℚ) → - d ≤ a - b → b - d ≤ a
-neg-sub a b d h =
+sub-neg-trans : (a b d : ℚ) → - d ≤ a - b → b - d ≤ a
+sub-neg-trans a b d h =
   let s1 : - d + b ≤ (a - b) + b
       s1 = +-mono-≤ h ≤-refl
       s2 : - d + b ≤ a
@@ -113,7 +115,7 @@ u-shift-upper :
 u-shift-upper d x x' m hu t mt =
   let a = u x t; b = u x' t
       lo = proj₁ (within (a - b) d (hu t mt))
-      h1 = neg-sub a b d lo
+      h1 = sub-neg-trans a b d lo
       h2 : (b - d) + d ≤ a + d
       h2 = +-mono-≤ h1 ≤-refl
   in subst (λ z → z ≤ a + d) (sub-add-cancel b d) h2
@@ -164,8 +166,8 @@ l-near-lower d x x' m hl t mt =
 -- Adding the same rational on the right preserves order.
 --
 -- 右侧同加一个有理数保持序。
-add-right : (a c d : ℚ) → c ≤ d → a + c ≤ a + d
-add-right a c d h = +-mono-≤ {x = a} {y = a} {u = c} {v = d} ≤-refl h
+add-mono-≤ : (a c d : ℚ) → c ≤ d → a + c ≤ a + d
+add-mono-≤ a c d h = +-mono-≤ {x = a} {y = a} {u = c} {v = d} ≤-refl h
 
 -- Adding the same rational on the left preserves order.
 --
@@ -182,7 +184,7 @@ add-left a b c h = +-mono-≤ {x = a} {y = b} {u = c} {v = c} h ≤-refl
 --
 -- 右侧减去更大的项会使结果更小。
 sub-le-right : (a c d : ℚ) → d ≤ c → a - c ≤ a - d
-sub-le-right a c d h = add-right a (- c) (- d) (neg-antimono-≤ h)
+sub-le-right a c d h = add-mono-≤ a (- c) (- d) (neg-antimono-≤ h)
 
 -- Regrouping an addition on the left of a subtraction.
 --
@@ -265,7 +267,7 @@ centre-cross-upper d Wx Wx' x x' nu nu' q nu≤q nu'≤q hx hxq hxu hu =
               (proj₂ (within (centre x nu - centre x q) (width x nu)
                         (centre-diff x nu nu q ℕP.≤-refl nu≤q)))
       hA2 : centre x q + width x nu ≤ centre x q + Wx
-      hA2 = add-right (centre x q) (width x nu) Wx hx
+      hA2 = add-mono-≤ (centre x q) (width x nu) Wx hx
       hA : centre x nu ≤ centre x q + Wx
       hA = ≤-trans hA1 hA2
       hB : centre x q ≤ centre x' q + (Wx' + d)
@@ -275,7 +277,7 @@ centre-cross-upper d Wx Wx' x x' nu nu' q nu≤q nu'≤q hx hxq hxu hu =
               (proj₂ (within (centre x' q - centre x' nu') (width x' nu')
                         (centre-diff x' nu' q nu' nu'≤q ℕP.≤-refl)))
       hC2 : centre x' nu' + width x' nu' ≤ centre x' nu' + Wx'
-      hC2 = add-right (centre x' nu') (width x' nu') Wx' hxu
+      hC2 = add-mono-≤ (centre x' nu') (width x' nu') Wx' hxu
       hC : centre x' q ≤ centre x' nu' + Wx'
       hC = ≤-trans hC1 hC2
       hC' : centre x' q + (Wx' + d) ≤ (centre x' nu' + Wx') + (Wx' + d)
@@ -308,7 +310,7 @@ centre-cross-lower d Wx Wx' x x' nu nu' q nu≤q nu'≤q hxq hx hxu hu =
               (proj₂ (within (centre x' nu' - centre x' q) (width x' nu')
                         (centre-diff x' nu' nu' q ℕP.≤-refl nu'≤q)))
       hA2 : centre x' q + width x' nu' ≤ centre x' q + Wx'
-      hA2 = add-right (centre x' q) (width x' nu') Wx' hxu
+      hA2 = add-mono-≤ (centre x' q) (width x' nu') Wx' hxu
       hA : centre x' nu' ≤ centre x' q + Wx'
       hA = ≤-trans hA1 hA2
       hB : centre x' q ≤ centre x q + (Wx + d)
@@ -318,7 +320,7 @@ centre-cross-lower d Wx Wx' x x' nu nu' q nu≤q nu'≤q hxq hx hxu hu =
               (proj₂ (within (centre x q - centre x nu) (width x nu)
                         (centre-diff x nu q nu nu≤q ℕP.≤-refl)))
       hC2 : centre x nu + width x nu ≤ centre x nu + Wx
-      hC2 = add-right (centre x nu) (width x nu) Wx hx
+      hC2 = add-mono-≤ (centre x nu) (width x nu) Wx hx
       hC : centre x q ≤ centre x nu + Wx
       hC = ≤-trans hC1 hC2
       hC' : centre x q + (Wx + d) ≤ (centre x nu + Wx) + (Wx + d)
@@ -349,9 +351,6 @@ pos-embed2 = positive 0<embed2
 
 -- The half is positive.
 --
--- 半为正。
-half-pos : Positive half
-half-pos = 1/pos⇒pos (embed 2) {{pos-embed2}}
 
 ------------------------------------------------------------------------
 -- The retained lower bound: the smaller of b / 2 and 1

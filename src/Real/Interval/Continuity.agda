@@ -32,7 +32,7 @@ open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym; ≈ℝ-refl; ≈ℝ
 open import Real.Interval.Kit using (≈ℝ-of-eq)
 open import Real.Interval.Mul.Order using (≈-neg; ≈-<-respʳ; +ℝ-cong; u-dyadic-0)
 open import Real.Interval.NegLaws using (negℝ-+-distrib)
-open import Real.Interval.Node using (l-dyadic; u-dyadic; centre-add; centre-neg)
+open import Real.Interval.Node using (l-dyadic; u-dyadic; centre-add; centre-sub)
 open import Real.Interval.Order using (_<ℝ_; <-trans)
 open import Real.Interval.OrderLaws using (<-+mono; <-neg; ≈-<-resp; width-below)
 
@@ -83,16 +83,6 @@ Continuous₂ f = ∀ x y → ContinuousAt₂ f x y
 
 -- The centre of a difference is the difference of centres.
 --
--- 差的中心等于中心之差。
-centre-sub : (x y : RealI) (n : ℕ) →
-  centre (x -ℝ y) n ≡ centre x n - centre y n
-centre-sub x y n = begin
-  centre (x -ℝ y) n
-    ≡⟨ centre-add x (negℝ y) n ⟩
-  centre x n + centre (negℝ y) n
-    ≡⟨ cong (centre x n +_) (centre-neg y n) ⟩
-  centre x n + neg (centre y n)
-    ∎
 
 -- The centre of a difference against an embedded rational.
 --
@@ -169,10 +159,10 @@ add-shift x c q = ≈ℝ-of-eq _ _ λ n →
 -- Subtracting a sum of embeddings distributes over the sum.
 --
 -- 减去两个嵌入之和等于分别相减再相加。
-sub-add : (x y : RealI) (q r : ℚ) →
+sub-add-Real : (x y : RealI) (q r : ℚ) →
   (x +ℝ y) -ℝ (embedℚ q +ℝ embedℚ r) ≈ℝ
   (x -ℝ embedℚ q) +ℝ (y -ℝ embedℚ r)
-sub-add x y q r = ≈ℝ-of-eq _ _ λ n →
+sub-add-Real x y q r = ≈ℝ-of-eq _ _ λ n →
   begin
     centre ((x +ℝ y) -ℝ (embedℚ q +ℝ embedℚ r)) n
       ≡⟨ centre-sub (x +ℝ y) (embedℚ q +ℝ embedℚ r) n ⟩
@@ -410,7 +400,7 @@ continuous-+-at x y k =
         s₃ = <-trans s₁ s₂
 
         r₁ : (x +ℝ y) -ℝ (e +ℝ e) ≈ℝ (x -ℝ e) +ℝ (y -ℝ e)
-        r₁ = sub-add x y d d
+        r₁ = sub-add-Real x y d d
 
         r₂ : (x +ℝ y) -ℝ E ≈ℝ (x +ℝ y) -ℝ (e +ℝ e)
         r₂ = +ℝ-cong ≈ℝ-refl (≈-neg emb-eq)
@@ -468,8 +458,8 @@ sub-add-cancel a b = begin
 -- Cancellation of the double leading term.
 --
 -- 消去双重首项。
-shift-cancel : (a b : ℚ) → ((a + a) + b) + neg a ≡ a + b
-shift-cancel a b = begin
+double-shift-cancel : (a b : ℚ) → ((a + a) + b) + neg a ≡ a + b
+double-shift-cancel a b = begin
   ((a + a) + b) + neg a
     ≡⟨ +-assoc (a + a) b (neg a) ⟩
   (a + a) + (b + neg a)
@@ -538,7 +528,7 @@ embedℚ-mono p q p<q =
       h₁ = +-monoˡ-< (neg (δ n)) h₀
 
       h₂ : δ n + p < q + neg (δ n)
-      h₂ = subst (λ z → z < q + neg (δ n)) (shift-cancel (δ n) p) h₁
+      h₂ = subst (λ z → z < q + neg (δ n)) (double-shift-cancel (δ n) p) h₁
 
       h₃ : δ n + p < neg (δ n) + q
       h₃ = subst (λ z → δ n + p < z) (+-comm q (neg (δ n))) h₂

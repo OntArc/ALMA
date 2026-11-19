@@ -59,23 +59,23 @@ open Obs
 -- Pointwise addition and scalar multiplication.
 --
 -- 逐点加法与数乘。
-add : Obs → Obs → Obs
-add (obs c a b) (obs c' a' b') = obs (c + c') (a + a') (b + b')
+obs-add : Obs → Obs → Obs
+obs-add (obs c a b) (obs c' a' b') = obs (c + c') (a + a') (b + b')
 
-scale : ℚ → Obs → Obs
-scale r (obs c a b) = obs (r * c) (r * a) (r * b)
+obs-scale : ℚ → Obs → Obs
+obs-scale r (obs c a b) = obs (r * c) (r * a) (r * b)
 
-neg : Obs → Obs
-neg (obs c a b) = obs (- c) (- a) (- b)
+obs-neg : Obs → Obs
+obs-neg (obs c a b) = obs (- c) (- a) (- b)
 
-zero : Obs
-zero = obs 0ℚ 0ℚ 0ℚ
+obs-zero : Obs
+obs-zero = obs 0ℚ 0ℚ 0ℚ
 
 -- The unit constant, and the canonical coordinates.
 --
 -- 单位常数与典范坐标。
-one : Obs
-one = obs 1ℚ 0ℚ 0ℚ
+obs-one : Obs
+obs-one = obs 1ℚ 0ℚ 0ℚ
 
 qO : Obs
 qO = obs 0ℚ 1ℚ 0ℚ
@@ -86,10 +86,10 @@ pO = obs 0ℚ 0ℚ 1ℚ
 -- Canonical Poisson bracket; the constant term of each argument drops.
 --
 -- 典范 Poisson 括号；两自变量的常数项不出现。
-bracket : Obs → Obs → Obs
-bracket (obs _ a b) (obs _ a' b') = obs (a * b' + - (b * a')) 0ℚ 0ℚ
+obs-bracket : Obs → Obs → Obs
+obs-bracket (obs _ a b) (obs _ a' b') = obs (a * b' + - (b * a')) 0ℚ 0ℚ
 
-infix 6 bracket
+infix 6 obs-bracket
 
 ------------------------------------------------------------------------
 -- Antisymmetry and the canonical relations
@@ -99,8 +99,8 @@ infix 6 bracket
 -- {f, f} = 0 since a b − b a = 0.
 --
 -- 因 a b − b a = 0，有 {f, f} = 0。
-bracket-self : ∀ f → bracket f f ≡ zero
-bracket-self (obs _ a b) =
+obs-bracket-self : ∀ f → obs-bracket f f ≡ obs-zero
+obs-bracket-self (obs _ a b) =
   cong (λ x → obs x 0ℚ 0ℚ) lemma
   where
   lemma : a * b + - (b * a) ≡ 0ℚ
@@ -114,8 +114,8 @@ bracket-self (obs _ a b) =
 -- Antisymmetry: {g, f} = −{f, g}.
 --
 -- 反对称：{g, f} = −{f, g}。
-bracket-skew : ∀ f g → bracket g f ≡ neg (bracket f g)
-bracket-skew (obs _ a b) (obs _ a' b') =
+obs-bracket-skew : ∀ f g → obs-bracket g f ≡ obs-neg (obs-bracket f g)
+obs-bracket-skew (obs _ a b) (obs _ a' b') =
   cong (λ x → obs x 0ℚ 0ℚ) lemma
   where
   lemma : a' * b + - (b' * a) ≡ - (a * b' + - (b * a'))
@@ -133,14 +133,14 @@ bracket-skew (obs _ a b) (obs _ a' b') =
 -- Canonical (Heisenberg) relations.
 --
 -- 正则（Heisenberg）关系。
-bracket-qp : bracket qO pO ≡ one
-bracket-qp = refl
+obs-bracket-qp : obs-bracket qO pO ≡ obs-one
+obs-bracket-qp = refl
 
-bracket-qq : bracket qO qO ≡ zero
-bracket-qq = bracket-self qO
+bracket-qq : obs-bracket qO qO ≡ obs-zero
+bracket-qq = obs-bracket-self qO
 
-bracket-pp : bracket pO pO ≡ zero
-bracket-pp = bracket-self pO
+bracket-pp : obs-bracket pO pO ≡ obs-zero
+bracket-pp = obs-bracket-self pO
 
 ------------------------------------------------------------------------
 -- Bilinearity
@@ -155,9 +155,9 @@ bracket-pp = bracket-self pO
 -- 第一自变量的双线性
 --
 -- 记 ω(u,v) 为 {u,v} 的常数值，对加法与数乘分配。
-bracket-addˡ : ∀ f g h →
-               bracket (add f g) h ≡ add (bracket f h) (bracket g h)
-bracket-addˡ (obs _ af bf) (obs _ ag bg) (obs _ ah bh) =
+obs-bracket-addˡ : ∀ f g h →
+               obs-bracket (obs-add f g) h ≡ obs-add (obs-bracket f h) (obs-bracket g h)
+obs-bracket-addˡ (obs _ af bf) (obs _ ag bg) (obs _ ah bh) =
   cong (λ x → obs x 0ℚ 0ℚ) lemma
   where
   lemma : (af + ag) * bh + - ((bf + bg) * ah)
@@ -190,20 +190,20 @@ bracket-addˡ (obs _ af bf) (obs _ ag bg) (obs _ ah bh) =
 -- Bilinearity in the second argument follows by antisymmetry.
 --
 -- 第二自变量的双线性由反对称推出。
-bracket-addʳ : ∀ f g h →
-               bracket f (add g h) ≡ add (bracket f g) (bracket f h)
-bracket-addʳ f g h = let open ≡-Reasoning in begin
-  bracket f (add g h)
-  ≡⟨ bracket-skew (add g h) f ⟩
-  neg (bracket (add g h) f)
-  ≡⟨ cong neg (bracket-addˡ g h f) ⟩
-  neg (add (bracket g f) (bracket h f))
-  ≡⟨ neg-add (bracket g f) (bracket h f) ⟩
-  add (neg (bracket g f)) (neg (bracket h f))
-  ≡⟨ cong₂ add (sym (bracket-skew g f)) (sym (bracket-skew h f)) ⟩
-  add (bracket f g) (bracket f h) ∎
+obs-bracket-addʳ : ∀ f g h →
+               obs-bracket f (obs-add g h) ≡ obs-add (obs-bracket f g) (obs-bracket f h)
+obs-bracket-addʳ f g h = let open ≡-Reasoning in begin
+  obs-bracket f (obs-add g h)
+  ≡⟨ obs-bracket-skew (obs-add g h) f ⟩
+  obs-neg (obs-bracket (obs-add g h) f)
+  ≡⟨ cong obs-neg (obs-bracket-addˡ g h f) ⟩
+  obs-neg (obs-add (obs-bracket g f) (obs-bracket h f))
+  ≡⟨ neg-add (obs-bracket g f) (obs-bracket h f) ⟩
+  obs-add (obs-neg (obs-bracket g f)) (obs-neg (obs-bracket h f))
+  ≡⟨ cong₂ obs-add (sym (obs-bracket-skew g f)) (sym (obs-bracket-skew h f)) ⟩
+  obs-add (obs-bracket f g) (obs-bracket f h) ∎
   where
-  neg-add : ∀ u v → neg (add u v) ≡ add (neg u) (neg v)
+  neg-add : ∀ u v → obs-neg (obs-add u v) ≡ obs-add (obs-neg u) (obs-neg v)
   neg-add (obs c a b) (obs c' a' b') = let open ≡-Reasoning in begin
     obs (- (c + c')) (- (a + a')) (- (b + b'))
     ≡⟨ cong (λ x → obs x (- (a + a')) (- (b + b')))
@@ -216,11 +216,11 @@ bracket-addʳ f g h = let open ≡-Reasoning in begin
 -- Scalar linearity in each argument.
 --
 -- 每个自变量上的数乘线性。
-bracket-scaleˡ : ∀ r f g →
-                 bracket (scale r f) g ≡ scale r (bracket f g)
-bracket-scaleˡ r f@(obs _ a b) g@(obs _ a' b') =
+obs-bracket-scaleˡ : ∀ r f g →
+                 obs-bracket (obs-scale r f) g ≡ obs-scale r (obs-bracket f g)
+obs-bracket-scaleˡ r f@(obs _ a b) g@(obs _ a' b') =
   let open ≡-Reasoning in begin
-    bracket (scale r f) g
+    obs-bracket (obs-scale r f) g
   ≡⟨ cong (λ x → obs x 0ℚ 0ℚ) lemma ⟩
     obs (r * (a * b' + - (b * a'))) 0ℚ 0ℚ
   ≡⟨ cong₂ (obs (r * (a * b' + - (b * a'))))
@@ -238,20 +238,20 @@ bracket-scaleˡ r f@(obs _ a b) g@(obs _ a' b') =
     ≡⟨ sym (*-distribˡ-+ r (a * b') (- (b * a'))) ⟩
     r * (a * b' + - (b * a')) ∎
 
-bracket-scaleʳ : ∀ r f g →
-                 bracket f (scale r g) ≡ scale r (bracket f g)
-bracket-scaleʳ r f g = let open ≡-Reasoning in begin
-  bracket f (scale r g)
-  ≡⟨ bracket-skew (scale r g) f ⟩
-  neg (bracket (scale r g) f)
-  ≡⟨ cong neg (bracket-scaleˡ r g f) ⟩
-  neg (scale r (bracket g f))
-  ≡⟨ neg-scale r (bracket g f) ⟩
-  scale r (neg (bracket g f))
-  ≡⟨ cong (scale r) (sym (bracket-skew g f)) ⟩
-  scale r (bracket f g) ∎
+obs-bracket-scaleʳ : ∀ r f g →
+                 obs-bracket f (obs-scale r g) ≡ obs-scale r (obs-bracket f g)
+obs-bracket-scaleʳ r f g = let open ≡-Reasoning in begin
+  obs-bracket f (obs-scale r g)
+  ≡⟨ obs-bracket-skew (obs-scale r g) f ⟩
+  obs-neg (obs-bracket (obs-scale r g) f)
+  ≡⟨ cong obs-neg (obs-bracket-scaleˡ r g f) ⟩
+  obs-neg (obs-scale r (obs-bracket g f))
+  ≡⟨ neg-scale r (obs-bracket g f) ⟩
+  obs-scale r (obs-neg (obs-bracket g f))
+  ≡⟨ cong (obs-scale r) (sym (obs-bracket-skew g f)) ⟩
+  obs-scale r (obs-bracket f g) ∎
   where
-  neg-scale : ∀ r u → neg (scale r u) ≡ scale r (neg u)
+  neg-scale : ∀ r u → obs-neg (obs-scale r u) ≡ obs-scale r (obs-neg u)
   neg-scale r (obs c a b) = let open ≡-Reasoning in begin
     obs (- (r * c)) (- (r * a)) (- (r * b))
     ≡⟨ cong (λ x → obs x (- (r * a)) (- (r * b)))
@@ -273,7 +273,7 @@ bracket-scaleʳ r f g = let open ≡-Reasoning in begin
 -- 每个括号的 q、p 系数皆零，故在中心
 --
 -- 中心观测量与任何观测量括号为零。
-central-kill : ∀ k h → bracket (obs k 0ℚ 0ℚ) h ≡ zero
+central-kill : ∀ k h → obs-bracket (obs k 0ℚ 0ℚ) h ≡ obs-zero
 central-kill k (obs _ a b) = cong (λ x → obs x 0ℚ 0ℚ) lemma
   where
   lemma : 0ℚ * b + - (0ℚ * a) ≡ 0ℚ
@@ -292,14 +292,14 @@ central-kill k (obs _ a b) = cong (λ x → obs x 0ℚ 0ℚ) lemma
 -- 左嵌套括号为零
 --
 -- { {f,g}, h } = 0，因内括号按定义即在中心（obs k 0 0）。
-nested-zero : ∀ f g h → bracket (bracket f g) h ≡ zero
+nested-zero : ∀ f g h → obs-bracket (obs-bracket f g) h ≡ obs-zero
 nested-zero (obs _ af bf) (obs _ ag bg) h =
   central-kill (af * bg + - (bf * ag)) h
 
 -- zero is the additive unit on the left.
 --
 -- zero 是左加法单位。
-add-zeroˡ : ∀ u → add zero u ≡ u
+add-zeroˡ : ∀ u → obs-add obs-zero u ≡ u
 add-zeroˡ (obs c a b) = let open ≡-Reasoning in begin
   obs (0ℚ + c) (0ℚ + a) (0ℚ + b)
   ≡⟨ cong (λ x → obs x (0ℚ + a) (0ℚ + b)) (+-identityˡ c) ⟩
@@ -314,23 +314,23 @@ add-zeroˡ (obs c a b) = let open ≡-Reasoning in begin
 -- Jacobi
 --
 -- 每个嵌套括号皆零，故循环和为零。
-jacobi : ∀ f g h →
-         add (add (bracket (bracket f g) h)
-                  (bracket (bracket g h) f))
-             (bracket (bracket h f) g) ≡ zero
-jacobi f g h = let open ≡-Reasoning in begin
-  add (add (bracket (bracket f g) h)
-           (bracket (bracket g h) f))
-      (bracket (bracket h f) g)
-  ≡⟨ cong₂ (λ x y → add (add x (bracket (bracket g h) f)) y)
+jacobi-identity : ∀ f g h →
+         obs-add (obs-add (obs-bracket (obs-bracket f g) h)
+                  (obs-bracket (obs-bracket g h) f))
+             (obs-bracket (obs-bracket h f) g) ≡ obs-zero
+jacobi-identity f g h = let open ≡-Reasoning in begin
+  obs-add (obs-add (obs-bracket (obs-bracket f g) h)
+           (obs-bracket (obs-bracket g h) f))
+      (obs-bracket (obs-bracket h f) g)
+  ≡⟨ cong₂ (λ x y → obs-add (obs-add x (obs-bracket (obs-bracket g h) f)) y)
            (nested-zero f g h) (nested-zero h f g) ⟩
-  add (add zero (bracket (bracket g h) f)) zero
-  ≡⟨ cong (λ x → add (add zero x) zero) (nested-zero g h f) ⟩
-  add (add zero zero) zero
-  ≡⟨ cong (λ x → add x zero) (add-zeroˡ zero) ⟩
-  add zero zero
-  ≡⟨ add-zeroˡ zero ⟩
-  zero ∎
+  obs-add (obs-add obs-zero (obs-bracket (obs-bracket g h) f)) obs-zero
+  ≡⟨ cong (λ x → obs-add (obs-add obs-zero x) obs-zero) (nested-zero g h f) ⟩
+  obs-add (obs-add obs-zero obs-zero) obs-zero
+  ≡⟨ cong (λ x → obs-add x obs-zero) (add-zeroˡ obs-zero) ⟩
+  obs-add obs-zero obs-zero
+  ≡⟨ add-zeroˡ obs-zero ⟩
+  obs-zero ∎
 
 ------------------------------------------------------------------------
 -- Hamiltonian dynamics: Newton's equations and energy conservation
@@ -340,13 +340,13 @@ jacobi f g h = let open ≡-Reasoning in begin
 -- Hamiltonian vector field X_H f = {f, H}.
 --
 -- 哈密顿向量场 X_H f = {f, H}。
-X : Obs → Obs → Obs
-X H f = bracket f H
+ham-vec : Obs → Obs → Obs
+ham-vec H f = obs-bracket f H
 
 -- q̇ = {q,H} = b_H: the constant coefficient equals H's p-coefficient.
 --
 -- q̇ = {q,H} = b_H：常数值等于 H 的 p 系数。
-eom-q : ∀ H → X H qO ≡ obs (b H) 0ℚ 0ℚ
+eom-q : ∀ H → ham-vec H qO ≡ obs (b H) 0ℚ 0ℚ
 eom-q (obs _ a b) = let open ≡-Reasoning in begin
   obs (1ℚ * b + - (0ℚ * a)) 0ℚ 0ℚ
   ≡⟨ cong (λ x → obs x 0ℚ 0ℚ) lemma ⟩
@@ -365,7 +365,7 @@ eom-q (obs _ a b) = let open ≡-Reasoning in begin
 -- ṗ = {p,H} = −a_H: the constant coefficient is minus H's q-coefficient.
 --
 -- ṗ = {p,H} = −a_H：常数值为 H 的 q 系数取负。
-eom-p : ∀ H → X H pO ≡ obs (- a H) 0ℚ 0ℚ
+eom-p : ∀ H → ham-vec H pO ≡ obs (- a H) 0ℚ 0ℚ
 eom-p (obs _ a b) = let open ≡-Reasoning in begin
   obs (0ℚ * b + - (1ℚ * a)) 0ℚ 0ℚ
   ≡⟨ cong (λ x → obs x 0ℚ 0ℚ) lemma ⟩
@@ -384,8 +384,8 @@ eom-p (obs _ a b) = let open ≡-Reasoning in begin
 -- Energy is conserved along its own flow: {H,H} = 0.
 --
 -- 能量沿自身流守恒：{H,H} = 0。
-energy-conserved : ∀ H → X H H ≡ zero
-energy-conserved H = bracket-self H
+energy-conserved : ∀ H → ham-vec H H ≡ obs-zero
+energy-conserved H = obs-bracket-self H
 
 ------------------------------------------------------------------------
 -- Constant-force instance
@@ -405,17 +405,17 @@ H-const-force = obs 0ℚ (- (1ℚ + 1ℚ)) 1ℚ
 -- q̇ = 1.
 --
 -- q̇ = 1。
-const-force-qdot : X H-const-force qO ≡ one
+const-force-qdot : ham-vec H-const-force qO ≡ obs-one
 const-force-qdot = refl
 
 -- ṗ = 2 (the force).
 --
 -- ṗ = 2（即力）。
-const-force-pdot : X H-const-force pO ≡ obs (1ℚ + 1ℚ) 0ℚ 0ℚ
+const-force-pdot : ham-vec H-const-force pO ≡ obs (1ℚ + 1ℚ) 0ℚ 0ℚ
 const-force-pdot = refl
 
 -- The constant-force Hamiltonian conserves its own energy.
 --
 -- 常力哈密顿量的能量守恒。
-const-force-energy : X H-const-force H-const-force ≡ zero
+const-force-energy : ham-vec H-const-force H-const-force ≡ obs-zero
 const-force-energy = energy-conserved H-const-force

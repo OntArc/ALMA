@@ -1,6 +1,5 @@
 ------------------------------------------------------------------------
--- The Fin push colimit packaged as a standard agda-categories Colimit
--- in DetCat
+-- The Fin push colimit packaged as a standard agda-categories Colimit in DetCat
 --
 -- DetCat is the category of deterministic systems with forward
 -- semiconjugacy maps. The shape ωCat is the free category on the
@@ -12,8 +11,7 @@
 -- semiconjugacy uses only s∞ v ≤ v+1 and iterated inject₁. Uniqueness
 -- is pointwise at the representatives.
 --
--- Fin push 余极限在确定性前向范畴 DetCat 中装配为 agda-categories
--- 标准 Colimit
+-- Fin push 余极限在确定性前向范畴 DetCat 中装配为 agda-categories 标准 Colimit
 --
 -- DetCat 是带前向半共轭映射的确定性系统范畴。形状 ωCat 是后继边上的
 -- 自由范畴。第 m 层为 (Fin (n-at m), t m)，后继箭头为 inject₁（其半
@@ -44,6 +42,7 @@ open import Categories.Functor using (Functor)
 
 open import Base.DetCat using (DetSys; DM; idDM; compDM; _≈DM_; DetCat)
 open import Cosmos.Carried.LimitSystem using (n-at; natToFin; toℕ-natToFin)
+open import Cosmos.Carried.Chain public using (Chain⇒; stop; step; _∘ch_; succ)
 import Cosmos.Carried.LimitSystemS as LS
 
 open DetSys using (I) renaming (step to step-det)
@@ -52,23 +51,7 @@ open DM
 ------------------------------------------------------------------------
 -- Shape category
 --
--- Paths over successor edges.
---
--- 形状范畴
---
--- 后继边上的路径。
-
-data Chain⇒ (m : ℕ) : ℕ → Set where
-  stop : Chain⇒ m m
-  step : ∀ {n} → Chain⇒ m n → Chain⇒ m (suc n)
-
-infixl 7 _∘ch_
-_∘ch_ : ∀ {m y n} → Chain⇒ y n → Chain⇒ m y → Chain⇒ m n
-stop    ∘ch f = f
-step g  ∘ch f = step (g ∘ch f)
-
-succ : ∀ {m} → Chain⇒ m (suc m)
-succ = step stop
+-- Chain⇒, _∘ch_, succ
 
 private
   idʳ-ch : ∀ {m y} (f : Chain⇒ m y) → f ∘ch stop ≡ f

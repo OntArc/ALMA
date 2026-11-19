@@ -36,35 +36,14 @@ open import Base.MCorr.Setoid using (SysEq)
 open import Base.MCorr.SetoidCat using
   (MCorrCatˢ; FMˢ; idFMˢ; compFMˢ; _≈FM_; ≈FM-refl; ≈FM-sym; ≈FM-trans
   ; ∘-resp-≈FM; sym-assocFM; identityˡFM; identityʳFM)
+open import Cosmos.Carried.Chain public using (Chain⇒; stop; step; _∘ch_; succ)
 open import Cosmos.Carried.SeqColimitS using
   (Chainˢ; Coconeˢ; IsColimitˢ; Colimitˢ; X; emb; leg; coc; has; Apex)
 
 ------------------------------------------------------------------------
 -- Shape category
 --
--- Paths over successor edges; source is a parameter.
---
--- 形状范畴
---
--- 后继边上的路径；源端为参数。
-
-data Chain⇒ (m : ℕ) : ℕ → Set where
-  stop : Chain⇒ m m
-  step : ∀ {n} → Chain⇒ m n → Chain⇒ m (suc n)
-
--- Composition prepends f to g; it recurses on the target-built g.
---
--- 复合把 f 接到 g 前，对目标端构造的 g 递归。
-infixl 7 _∘ch_
-_∘ch_ : ∀ {m y n} → Chain⇒ y n → Chain⇒ m y → Chain⇒ m n
-stop    ∘ch f = f
-step g  ∘ch f = step (g ∘ch f)
-
--- The one-step successor arrow.
---
--- 一步后继箭头。
-succ : ∀ {m} → Chain⇒ m (suc m)
-succ = step stop
+-- Chain⇒, _∘ch_, succ
 
 ch-idˡ : ∀ {m y} (f : Chain⇒ m y) → stop ∘ch f ≡ f
 ch-idˡ f = refl

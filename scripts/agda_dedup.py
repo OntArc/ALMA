@@ -8,6 +8,8 @@
   l1     库内语义等价判定：每个候选生成 chkT′ 探针并编译（DEFEQ / NEQ / SCOPE_ERROR / OTHER）
   l2     替换实验：每条人工指定命题生成 audit 探针，证明体换成目标库定理（REPLACED / FAILED）
   cross  与另一个库（默认 agda-stdlib）做 alpha 形状匹配，列出跨库候选（不编译）
+  body   定义体比对：逐字同体（含改名复制）+ 近似相似（不编译）
+  names  同名冲突表：同名声明按「同体 / 同型 / 异体」分类（不编译）
 
 判定原理
   L1 探针在被测模块副本尾部追加
@@ -57,6 +59,7 @@
 import argparse
 import collections
 import difflib
+import hashlib
 import itertools
 import json
 import os
@@ -1406,6 +1409,196 @@ def cmd_scan(args, ctx):
     return report, [dict(a=x, b=y) for x, y in cands]
 
 
+# ---------------------------------------------------------------- 定义体比对（body / names）
+
+def _tok(s):
+    """粗切词：标识符整体保留，其余符号按单字符切。
+
+    这里不比类型，比的是证明写法。按空白切不行——`norm_txt` 已经把空白压掉了；
+    按单字符切会让 `trans` 与 `sym` 这类名字失去区分度，所以标识符要整体留。
+    """
+    return re.findall(r'[A-Za-z0-9′₀-₉]+|[^\sA-Za-z0-9′₀-₉]', s)
+
+
+def _jac(sa, sb):
+    if not sa or not sb:
+        return 0.0
+    return len(sa & sb) / len(sa | sb)
+
+
+def collect_bodies(ctx, filters, alpha=False, min_len=0):
+    """给每条顶格声明补上归一后的定义体、长度与 sha256 指纹。
+
+    `decl_body` 已经把声明名换成占位符，所以「复制一段证明、把顶层名改掉」也能
+    在逐字档对上——那是 `scan --all-types` 与 `cross` 的 COPY 档都覆盖不到的情形，
+    因为后两者要求同名或同类型。`alpha` 只额外归一 Pi 绑定变量（复用 `shape`），
+    λ/where 里的局部重命名不在内；完整的 alpha 等价请交给 `l1` 的 DEFEQ。
+    """
+    decls, _, files, _ = collect(ctx['src'], filters, ctx['prop'])
+    out = []
+    for d in decls:
+        b = decl_body(src_path(ctx['src'], d['file']), d['line'], d['name'])
+        if alpha:
+            b = shape(b)
+        d = dict(d, body=b, blen=len(b),
+                 fp=hashlib.sha256(b.encode('utf-8')).hexdigest(),
+                 tok=None)
+        if d['blen'] >= min_len:
+            out.append(d)
+    return out, len(decls), files
+
+
+def collect_block_bodies(ctx, filters, alpha=False, min_len=0):
+    """`module _` 块体内与块体同级的声明，体用 `_nested_body` 取。
+
+    与 `block_decls` 共用 `mod_block_ranges` 的骨架，区别是这里要的是**证明体**：
+    块内 `typ` 只有半截（块参数在块头上、还可能引用块内 private 定义），拿它配对会
+    造出假候选；定义体本身是完整的，可以比。`_nested_body` 按同级条目截断，不能用
+    `decl_body`——后者按"顶格才算新声明"截，会把后面几个同级条目一起吞进来。
+    """
+    out = []
+    for root in ctx['src']:
+        for p in list_agda_files(root, filters):
+            rel = os.path.relpath(p, root)
+            lines = read_src(p)
+            for h, col, end in mod_block_ranges(lines):
+                if col is None:
+                    continue
+                for k in range(h + 1, end):
+                    t = lines[k]
+                    if not t.strip() or (len(t) - len(t.lstrip())) != col:
+                        continue
+                    b = t.lstrip()
+                    if b.startswith(('--', '(', '{')):
+                        continue
+                    mt = DECL.match(b)
+                    if not (mt and mt.group(1) not in KEY and ':' in t):
+                        continue
+                    name = mt.group(1)
+                    body = _nested_body(lines, k, name, col, end)
+                    if alpha:
+                        body = shape(body)
+                    d = dict(file=rel, name=name, line=k + 1,
+                             typ=t.split(':', 1)[1].strip(),
+                             block='%s:%d' % (rel, h + 1),
+                             body=body, blen=len(body),
+                             fp=hashlib.sha256(body.encode('utf-8')).hexdigest(),
+                             tok=None)
+                    if d['blen'] >= min_len:
+                        out.append(d)
+    return out
+
+
+def cmd_body(args, ctx):
+    ds, nd, files = collect_bodies(ctx, args.filter, args.alpha, args.min_len)
+    bs = (collect_block_bodies(ctx, args.filter, args.alpha, args.block_min_len)
+          if args.blocks else [])
+    ds = ds + bs
+    by = collections.defaultdict(list)
+    for d in ds:
+        by[d['fp']].append(d)
+    groups = sorted((g for g in by.values() if len(g) >= 2),
+                    key=lambda g: (-len(g), g[0]['file'], g[0]['line']))
+    print('bodies %d%s / decls %d  files %d  exact-groups %d  involved %d'
+          % (len(ds), ('（含 blocks %d）' % len(bs)) if args.blocks else '',
+             nd, files, len(groups), sum(len(g) for g in groups)))
+    for k, g in enumerate(groups[:args.show], 1):
+        print('  [%d] %d 条  len=%d  sha=%s'
+              % (k, len(g), g[0]['blen'], g[0]['fp'][:12]))
+        for d in g:
+            print('      %s @ %s:%d' % (d['name'], d['file'], d['line']))
+
+    pairs = []
+    if args.near:
+        # 三步预筛缺一不可：2451 条两两 300 万对，直接 difflib 要几分钟。
+        # 先长度比（证明体长度差一倍以上基本不是同一段），再 token Jaccard，
+        # 最后才对通过者算 difflib。Jaccard 阈值放低到 sim*0.8 是保守做法：
+        # 两种度量不同，宁可多留一些给 difflib 复核。
+        for d in ds:
+            d['tok'] = set(_tok(d['body']))
+        for a, b in itertools.combinations(ds, 2):
+            if a['fp'] == b['fp']:
+                continue
+            la, lb = a['blen'], b['blen']
+            if min(la, lb) / max(la, lb) < 0.5:
+                continue
+            # 块内声明的 typ 只有半截，`shape` 相等说明不了「同一条命题」，
+            # 这一档不拿它当跳过依据，否则会把块内真候选静默吃掉。
+            if (args.skip_same_type and not a.get('block') and not b.get('block')
+                    and shape(a['typ']) == shape(b['typ'])):
+                continue
+            jac = _jac(a['tok'], b['tok'])
+            if jac < args.sim * 0.8:
+                continue
+            ratio = difflib.SequenceMatcher(None, a['body'], b['body']).ratio()
+            if ratio >= args.sim:
+                pairs.append((ratio, jac, a, b))
+        pairs.sort(key=lambda x: -x[0])
+        print('near 候选 %d 对（difflib>=%.2f%s）'
+              % (len(pairs), args.sim,
+                 '，已跳过同类型对' if args.skip_same_type else ''))
+        for k, (ratio, jac, a, b) in enumerate(pairs[:args.top], 1):
+            print('  [%d] %.3f  jac=%.2f  %s @ %s:%d  <->  %s @ %s:%d'
+                  % (k, ratio, jac, a['name'], a['file'], a['line'],
+                     b['name'], b['file'], b['line']))
+            print('      A: %s' % a['typ'][:110])
+            print('      B: %s' % b['typ'][:110])
+        print('  注：相似度是筛子，不是结论。同类型不同证的冗余归 scan/l1；'
+              '这一档专找「类型不同、证明写法近似」的搬运。')
+
+    report = dict(command='body', decls=nd, bodies=len(ds), files=files,
+                  blocks=len(bs), exact_groups=len(groups),
+                  exact_involved=sum(len(g) for g in groups),
+                  near=len(pairs) if args.near else None)
+    cases = [dict(a=x['name'], af=x['file'], al=x['line'],
+                  b=y['name'], bf=y['file'], bl=y['line'], sim=round(r, 3))
+             for r, _, x, y in pairs[:args.top]]
+    return report, cases
+
+
+def cmd_names(args, ctx):
+    """同名声明分类：SAME-BODY / SAME-TYPE / DIFF。
+
+    `scan` 输出的是「类型相同的配对」，不回答「同一个名字在几个文件里各是什么」；
+    改名、加前缀、决定谁该转发给谁时，需要的是后者。这里只做库内，跨库同名走
+    `cross`。
+    """
+    ds, nd, files = collect_bodies(ctx, args.filter, False, 0)
+    by = collections.defaultdict(list)
+    for d in ds:
+        by[d['name']].append(d)
+    groups = [g for g in by.values() if len(g) >= 2]
+    order = {'SAME-BODY': 0, 'SAME-TYPE': 1, 'DIFF': 2}
+    rows = []
+    for g in groups:
+        fps = {d['fp'] for d in g}
+        typs = {shape(d['typ']) for d in g}
+        cls = 'SAME-BODY' if len(fps) == 1 else (
+            'SAME-TYPE' if len(typs) == 1 else 'DIFF')
+        rows.append((cls, g))
+    rows.sort(key=lambda r: (order[r[0]], -len(r[1]), r[1][0]['name']))
+    stat = collections.Counter(r[0] for r in rows)
+    print('names 同名组 %d（涉及 %d 条 / decls %d，files %d）  SAME-BODY %d  '
+          'SAME-TYPE %d  DIFF %d'
+          % (len(rows), sum(len(g) for _, g in rows), nd, files,
+             stat['SAME-BODY'], stat['SAME-TYPE'], stat['DIFF']))
+    for k, (cls, g) in enumerate(rows[:args.show], 1):
+        print('  [%d] %s  ×%d  len=%s'
+              % (k, cls, len(g), '/'.join(str(d['blen']) for d in g)))
+        for d in g:
+            print('      %s @ %s:%d' % (d['name'], d['file'], d['line']))
+    print('  注：SAME-BODY 才可直接合并/转发；SAME-TYPE 是同一命题的两套证明，'
+          '要先看证法与调用点；DIFF 只是撞名，不是重复。')
+
+    report = dict(command='names', decls=nd, files=files, groups=len(rows),
+                  same_body=stat['SAME-BODY'], same_type=stat['SAME-TYPE'],
+                  diff=stat['DIFF'])
+    cases = [dict(cls=cls, names=[d['name'] for d in g],
+                  files=['%s:%d' % (d['file'], d['line']) for d in g])
+             for cls, g in rows[:args.show]]
+    return report, cases
+
+
 L1_STATUS_ORDER = ('DEFEQ', 'NEQ', 'CLASH', 'SCOPE_ERROR', 'OTHER',
                    'CROSS_COPY', 'CROSS_TYPE', 'CROSS_SHAPE', 'CROSS_SCOPE', 'CROSS_NAME')
 
@@ -1764,13 +1957,15 @@ def repo_root_of(path):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        prog='agda_dedup.py', description='Agda 查重 / 语义等价审计（scan / l1 / l2 / cross）',
+        prog='agda_dedup.py', description='Agda 查重 / 语义等价审计（scan / l1 / l2 / cross / body / names）',
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     sub = ap.add_subparsers(dest='cmd', required=True)
     for name, text in (('scan', '解析 + 形状分组，列出候选（不编译）'),
                        ('l1', '库内 L1 判定：chkT 探针 + 编译'),
                        ('l2', '替换实验：audit 探针 + 编译'),
-                       ('cross', '跨库形状匹配（不编译）')):
+                       ('cross', '跨库形状匹配（不编译）'),
+                       ('body', '定义体比对：逐字同体 + 近似相似（不编译）'),
+                       ('names', '同名冲突表：同体/同型/异体（不编译）')):
         sp = sub.add_parser(name, help=text)
         add_common(sp)
         if name == 'l1':
@@ -1790,6 +1985,29 @@ def main(argv=None):
         if name == 'l2':
             sp.add_argument('--cases', required=True, help='用例 JSON（见 使用说明.md）')
             sp.add_argument('--imports', help='覆盖默认 import 块，用 \\n 分行')
+        if name == 'body':
+            sp.add_argument('--blocks', action='store_true',
+                            help='把 `module _` 块体内同级声明并入（与 scan 的 blocks '
+                                 '档同口径）；块内类型是半截的，只比定义体')
+            sp.add_argument('--block-min-len', type=int, default=40,
+                            help='--blocks 下块内定义体的长度下限（默认 40，低于顶格的 '
+                                 '60：块内多是结构别名/短定义，按 60 会漏掉 arch 这类'
+                                 '49 字符的同体）')
+            sp.add_argument('--near', action='store_true',
+                            help='再跑一档近似相似（长度比 + Jaccard + difflib），'
+                                 '专找「类型不同、证明写法近似」的搬运；默认只跑逐字档')
+            sp.add_argument('--alpha', action='store_true',
+                            help='逐字档前先把 Pi 绑定变量归一（复用 shape）；'
+                                 'λ/where 的局部重命名不在内，完整 alpha 用 l1')
+            sp.add_argument('--min-len', type=int, default=60,
+                            help='定义体归一后少于此长度不入表（默认 60；'
+                                 '`= refl` 这类短体全库同形，进表只会淹掉真候选）')
+            sp.add_argument('--sim', type=float, default=0.6,
+                            help='近似档的 difflib 阈值（默认 0.6，是筛子不是结论）')
+            sp.add_argument('--top', type=int, default=50, help='近似档最多列几对')
+            sp.add_argument('--include-same-type', dest='skip_same_type',
+                            action='store_false',
+                            help='不跳过类型形状相同的对（默认跳过，那类归 scan/l1）')
         if name == 'cross':
             sp.add_argument('--other', help='目标库 src 目录；默认自动找 agda-stdlib')
             sp.add_argument('--drop-qualified', action='store_true',
@@ -1843,7 +2061,8 @@ def main(argv=None):
         sys.stderr.write('  提示：--root 要给**仓库根**，不是 src/。在仓库根里跑 `--root .`，'
                          '或在任意目录写 `--root /path/to/repo`；脚本本身放在哪不影响。\n')
         return 2
-    fn = dict(scan=cmd_scan, l1=cmd_l1, l2=cmd_l2, cross=cmd_cross)[args.cmd]
+    fn = dict(scan=cmd_scan, l1=cmd_l1, l2=cmd_l2, cross=cmd_cross,
+              body=cmd_body, names=cmd_names)[args.cmd]
     t0 = time.time()
     report, cases = fn(args, ctx)
     # 计时落在 report 里而不是只打印：CI 要对比"这次比上次慢了多少"时，

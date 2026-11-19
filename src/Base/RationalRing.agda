@@ -11,14 +11,15 @@ module Base.RationalRing where
 open import Algebra.Properties.Group using (⁻¹-involutive)
 open import Algebra.Properties.CommutativeMonoid using (medial)
 open import Algebra.Properties.Ring using ([-x][-y]≈xy; [y-z]x≈yx-zx; x[y-z]≈xy-xz)
-open import Data.Rational using (0ℚ; 1ℚ; _+_; _*_; _-_; -_; _<_; _≤_)
+open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _+_; _*_; _-_; -_; _<_; _≤_)
 open import Data.Rational.Properties using
   (+-assoc; +-comm; +-identityˡ; +-identityʳ; +-inverseˡ; *-assoc; *-comm
   ; *-identityˡ; *-zeroˡ; *-distribˡ-+; *-distribʳ-+; neg-distrib-+; positive⁻¹
   ; neg-distribʳ-*; <⇒≤; +-0-group; +-*-ring; +-0-commutativeMonoid
-  ; *-1-commutativeMonoid)
+  ; *-1-commutativeMonoid; +-monoˡ-<; +-monoˡ-≤; neg-antimono-<; +-inverseʳ
+  ; +-monoʳ-<; <-trans)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; cong; cong₂; module ≡-Reasoning)
+  (_≡_; refl; sym; trans; cong; cong₂; subst; module ≡-Reasoning)
 open ≡-Reasoning
 
 ------------------------------------------------------------------------
@@ -389,3 +390,212 @@ norm-tail k = begin
   0ℚ + k
   ≡⟨ +-identityˡ k ⟩
   k ∎
+
+------------------------------------------------------------------------
+-- Rational bookkeeping for sums, differences and shifts
+--
+-- 求和、差与移位的记账引理
+
+-- Adding a term and subtracting it again.
+--
+-- 先加后减同一项。
+cancel-add : (x y : ℚ) → (x + y) + -_ y ≡ x
+cancel-add x y =
+  trans (+-assoc x y (-_ y))
+    (trans (cong (x +_) (+-inverseʳ y)) (+-identityʳ x))
+
+------------------------------------------------------------------------
+-- Right cancellation for strict inequality
+--
+-- 严格不等式的右消去
+
+-- (a + x) - (a + y) = x - y.
+--
+-- 同项相消的差值等式。
+sub-cancel-common : (a x y : ℚ) → (a + x) - (a + y) ≡ x - y
+sub-cancel-common a x y =
+  begin
+    (a + x) - (a + y)
+      ≡⟨ cong (λ z → (a + x) + z) (neg-distrib-+ a y) ⟩
+    (a + x) + (-_ a + -_ y)
+      ≡⟨ sym (+-assoc (a + x) (-_ a) (-_ y)) ⟩
+    ((a + x) + -_ a) + -_ y
+      ≡⟨ cong (λ z → z + -_ y) red ⟩
+    x + -_ y
+  ∎
+  where
+    red : (a + x) + -_ a ≡ x
+    red =
+      begin
+        (a + x) + -_ a
+          ≡⟨ +-assoc a x (-_ a) ⟩
+        a + (x + -_ a)
+          ≡⟨ cong (λ z → a + z) (+-comm x (-_ a)) ⟩
+        a + (-_ a + x)
+          ≡⟨ sym (+-assoc a (-_ a) x) ⟩
+        (a + -_ a) + x
+          ≡⟨ cong (λ z → z + x) (+-inverseʳ a) ⟩
+        0ℚ + x
+          ≡⟨ +-identityˡ x ⟩
+        x
+      ∎
+
+------------------------------------------------------------------------
+-- (a + c) - (b + d) = (a - b) + (c - d)
+--
+-- 两项差之和的分配等式
+
+-- A difference of sums splits into a sum of differences.
+--
+-- 两项和之差可以拆成两项差之和。
+sub-add-split : (a b c d : ℚ) → (a + c) - (b + d) ≡ (a - b) + (c - d)
+sub-add-split a b c d =
+  begin
+    (a + c) - (b + d)
+      ≡⟨ cong (λ z → (a + c) + z) (neg-distrib-+ b d) ⟩
+    (a + c) + (-_ b + -_ d)
+      ≡⟨ sym (+-assoc (a + c) (-_ b) (-_ d)) ⟩
+    ((a + c) + -_ b) + -_ d
+      ≡⟨ cong (λ z → z + -_ d) mid ⟩
+    ((a - b) + c) + -_ d
+      ≡⟨ +-assoc (a - b) c (-_ d) ⟩
+    (a - b) + (c + -_ d)
+  ∎
+  where
+    mid : (a + c) + -_ b ≡ (a - b) + c
+    mid =
+      begin
+        (a + c) + -_ b
+          ≡⟨ cong (λ z → z + -_ b) (+-comm a c) ⟩
+        (c + a) + -_ b
+          ≡⟨ +-assoc c a (-_ b) ⟩
+        c + (a + -_ b)
+          ≡⟨ +-comm c (a + -_ b) ⟩
+        (a - b) + c
+      ∎
+
+------------------------------------------------------------------------
+-- (x - e) + e = x
+--
+-- 先减后加同一项
+
+sub-shift-cancel : (x e : ℚ) → (x - e) + e ≡ x
+sub-shift-cancel x e =
+  begin
+    (x - e) + e
+      ≡⟨ +-assoc x (-_ e) e ⟩
+    x + (-_ e + e)
+      ≡⟨ cong (λ z → x + z) (+-comm (-_ e) e) ⟩
+    x + (e + -_ e)
+      ≡⟨ cong (λ z → x + z) (+-inverseʳ e) ⟩
+    x + 0ℚ
+      ≡⟨ +-identityʳ x ⟩
+    x
+  ∎
+
+------------------------------------------------------------------------
+-- The first-order term is the argument itself
+--
+-- 一阶项就是自变量本身
+
+-- Moving a term across a strict bound.
+--
+-- 把加项搬过严格界。
+lt-sub : (x y e : ℚ) → x < y + e → x - e < y
+lt-sub x y e h =
+  subst (λ z → x + -_ e < z) (cancel-add y e) (+-monoˡ-< (-_ e) h)
+
+lt-add : (x y e : ℚ) → x - e < y → x < y + e
+lt-add x y e h =
+  subst (λ z → z < y + e) (sub-shift-cancel x e) (+-monoˡ-< e h)
+
+lt-shift : (x y e : ℚ) → x + e < y → x < y - e
+lt-shift x y e h =
+  subst (λ z → z < y + -_ e) (cancel-add x e) (+-monoˡ-< (-_ e) h)
+
+-- (b + c) + -_ b = c.
+--
+-- 消去首项的加法等式。
+sub-sum-swap : (b c : ℚ) → (b + c) + -_ b ≡ c
+sub-sum-swap b c =
+  begin
+    (b + c) + -_ b
+      ≡⟨ cong (λ z → z + -_ b) (+-comm b c) ⟩
+    (c + b) + -_ b
+      ≡⟨ +-assoc c b (-_ b) ⟩
+    c + (b + -_ b)
+      ≡⟨ cong (c +_) (+-inverseʳ b) ⟩
+    c + 0ℚ
+      ≡⟨ +-identityʳ c ⟩
+    c
+  ∎
+
+-- b + c <= a implies c <= a - b.
+--
+-- 非严格界的搬移。
+le-sub-shift : (a b c : ℚ) → b + c ≤ a → c ≤ a - b
+le-sub-shift a b c h =
+  subst (λ z → z ≤ a + -_ b) (sub-sum-swap b c) (+-monoˡ-≤ (-_ b) h)
+
+-- Two strict bounds subtract in opposite directions.
+--
+-- 两个严格界反向相减。
+sub-lt : (a b c d : ℚ) → a < b → c < d → a - d < b - c
+sub-lt a b c d h k =
+  let s1 : a + -_ d < b + -_ d
+      s1 = +-monoˡ-< (-_ d) h
+      nd< : -_ d < -_ c
+      nd< = neg-antimono-< k
+      s2 : b + -_ d < b + -_ c
+      s2 = +-monoʳ-< b nd<
+  in <-trans s1 s2
+
+-- Distribution of two subtractions.
+--
+-- 两层减法的分配等式。
+sub-sub : (a b c d : ℚ) → (a - c) - (b + d) ≡ (a - b) - (c + d)
+sub-sub a b c d =
+  trans (cong (λ z → (a - c) + z) (neg-distrib-+ b d))
+    (trans (+interchange a (-_ c) (-_ b) (-_ d))
+           (cong (λ z → (a - b) + z) (sym (neg-distrib-+ c d))))
+
+-- Strict monotonicity of expq.
+-- j = suc (suc m) is the level at which four dyadic half-widths fit into
+-- one dyadic width at level m, and m is chosen by delta-below so that
+-- delta m < p - q. That is the only place where the two arguments' sizes
+-- are used; everything else is the level-j bookkeeping of L3.
+--
+-- expq 的严格单调性。
+-- 取 j = suc (suc m)：在第 j 层四个 delta j 恰好等于第 m 层的一个 delta，
+-- 而 m 由 delta-below 选出使 delta m < p - q。两个自变量的大小只在这里
+-- 用到；其余都是 L3 的第 j 层记账。
+rotate-sum : (a x y z : ℚ) → ((a + x) + y) + z ≡ (a + z) + (x + y)
+rotate-sum a x y z =
+  let axz : (a + x) + z ≡ (a + z) + x
+      axz = trans (+-assoc a x z)
+              (trans (cong (a +_) (+-comm x z)) (sym (+-assoc a z x)))
+      s1 : ((a + x) + y) + z ≡ (a + x) + (y + z)
+      s1 = +-assoc (a + x) y z
+      s2 : (a + x) + (y + z) ≡ (a + x) + (z + y)
+      s2 = cong ((a + x) +_) (+-comm y z)
+      s3 : (a + x) + (z + y) ≡ ((a + x) + z) + y
+      s3 = sym (+-assoc (a + x) z y)
+      s4 : ((a + x) + z) + y ≡ ((a + z) + x) + y
+      s4 = cong (_+ y) axz
+      s5 : ((a + z) + x) + y ≡ (a + z) + (x + y)
+      s5 = +-assoc (a + z) x y
+  in trans s1 (trans s2 (trans s3 (trans s4 s5)))
+
+------------------------------------------------------------------------
+-- Reversing a difference
+--
+-- 反转差式
+
+-- neg (p - q) ≡ q - p: flipping the sign of a difference swaps its
+-- operands.
+--
+-- neg (p - q) ≡ q - p：差式取反即交换两个操作数。
+neg-sub : (p q : ℚ) → -_ (p - q) ≡ q - p
+neg-sub p q =
+  trans (neg-distrib-+ p (-_ q))
+    (trans (cong (-_ p +_) (neg-involutive q)) (+-comm (-_ p) q))

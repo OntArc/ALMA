@@ -22,3 +22,9 @@ python3 agda_dedup.py l2 --root . --cases my_cases.json --jobs 2
 
 # 4. Cross-check against agda-stdlib
 python3 agda_dedup.py cross --root . --filter /Real --drop-qualified
+
+# 5. Proof bodies: exact copies (including renamed) and near-duplicates
+python3 agda_dedup.py body --root . --filter /Real --near --top 20
+
+# 6. Same-name conflicts across files (SAME-BODY / SAME-TYPE / DIFF)
+python3 agda_dedup.py names --root .

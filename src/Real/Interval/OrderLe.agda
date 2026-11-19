@@ -25,6 +25,7 @@ open ≡-Reasoning
 open import Base.RationalRing using (neg-involutive)
 open import Real.Interval using (RealI)
 open import Real.Interval.Arith using (_+ℝ_; negℝ; _-ℝ_)
+open import Real.Interval.ArithLaws using (+ℝ-comm)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym)
 open import Real.IntervalEquiv using
   (l; u; centre; width; width-n; centre-l; centre-u; recipPow2)
@@ -98,15 +99,6 @@ neg-diff-flip a b =
 -- 自反性。
 ≤ℝ-refl : {x : RealI} → x ≤ℝ x
 ≤ℝ-refl {x} = <-irrefl x
-
--- Transitivity, by cotransitivity of _<ℝ_.
---
--- 传递性，借助 _<ℝ_ 的余传递性。
-≤ℝ-trans : {x y z : RealI} → x ≤ℝ y → y ≤ℝ z → x ≤ℝ z
-≤ℝ-trans {x} {y} {z} x≤y y≤z z<x
-  with <-cotrans z<x
-...  | inj₁ z<y = y≤z z<y
-...  | inj₂ y<x = x≤y y<x
 
 -- Strict order embeds into non-strict order.
 --
@@ -339,3 +331,14 @@ module AntisymAux (x y : RealI)
 ≤ℝ-+-mono : {x y z : RealI} → x ≤ℝ y → x +ℝ z ≤ℝ y +ℝ z
 ≤ℝ-+-mono {x} {y} {z} x≤y y+z<x+z =
   x≤y (<-+mono-reflect {x} {y} {z} y+z<x+z)
+
+-- Left-additive monotonicity. The repository only had the right-additive
+-- law above, so commutativity moves the fixed addend to the right, the law
+-- applies, and commutativity moves it back.
+--
+-- 左加单调。仓里只有上面的右加版本，故先用交换律把固定加数挪到右边、
+-- 用定律、再用交换律挪回来。
+≤ℝ-+-monoˡ : {x y z : RealI} → x ≤ℝ y → z +ℝ x ≤ℝ z +ℝ y
+≤ℝ-+-monoˡ {x} {y} {z} x≤y =
+  ≤ℝ-resp-≈ (+ℝ-comm x z) (+ℝ-comm y z)
+    (≤ℝ-+-mono {x} {y} {z} x≤y)

@@ -10,7 +10,7 @@ work/l2_cases_example.json  L2 用例示例（4 条已实证可替换）
 
 ---
 
-## 1. 四个子命令怎么选
+## 1. 六个子命令怎么选
 
 | 子命令 | 干什么 | 要编译吗 | 实测耗时（ALMA 244 文件） | 什么时候用 |
 |---|---|---|---|---|
@@ -18,8 +18,11 @@ work/l2_cases_example.json  L2 用例示例（4 条已实证可替换）
 | `l1` | 库内语义等价判定（`chkT′` 探针 + `CROSS_*` 文本比对） | 是（仅同文件） | 9 对 ≈ 40 秒；34 对 ≈ 1 分钟（25 条跨文件不编译） | 候选要靠 Agda 判「定义相不相等」 |
 | `l2` | 替换实验（`audit` 探针） | 是 | 4 条 ≈ 50 秒（2 路） | 判断某条能否换成标准库现成定理 |
 | `cross` | 与 stdlib 做形状匹配 | 否 | 30–60 秒（要解析 9000+ 声明） | 怀疑与外部库重复时 |
+| `body` | 定义体比对：逐字同体（含改名复制）+ 近似相似；`--blocks` 并入块内 | 否 | 0.6 秒（含 `--blocks` 1.1 秒）；加 `--near` 全仓 35 秒 | 怀疑「抄证明改命题」或「改名复制」时 |
+| `names` | 同名声明分组：SAME-BODY / SAME-TYPE / DIFF | 否 | 0.6 秒 | 改名、加前缀、决定谁该转发给谁时 |
 
-一句话分工：**`scan` 提候选，`l1` 判真假，`l2` 验可替换，`cross` 查外库**。
+一句话分工：**`scan` 提候选，`l1` 判真假，`l2` 验可替换，`cross` 查外库，
+`body` 比证明体，`names` 查撞名**。
 `scan` 和 `cross` 都只是形状筛，它们的命中不等于重复；`l1` 的 `DEFEQ` 是同文件内的硬
 结论，跨文件只能给 `CROSS_*` 四档文本级证据——因为跨模块定义在 Agda 里不可能
 definitionally equal（见 3.2）。且文本相同还不够：同名类型若在两文件里结构不同
@@ -440,6 +443,65 @@ record 字段名、`field` 块里的名字不在这张表里，所以 304 比历
 两条防线别混：`pure-shared-vocab`（上面这条）挡的是**本库特有对象**混进跨库比对，
 历史那次 `_≈ℝ_` vs `_*ℝ_` 的假候选就是它挡掉的；`--drop-qualified` 挡的是另一件事
 ——record 字段/限定访问泄漏（`RealI.l` 之类）。两者独立，关掉任一条都不会让另一条失效。
+
+---
+
+## 3.5 body / names：证明体这一维（2026-11 新增）
+
+前四个子命令的候选池都建在**类型**上：`scan` 按类型形状分组，`l1` 判类型是否定义相等，
+`cross` 跟外库比类型形状。它们回答不了两个问题：一段证明被改个名字复制到别处；一段证明
+写法几乎一样、但命题换了一个。`body` / `names` 补的就是这一维。
+
+```bash
+# 逐字档：定义体归一后 sha256 分组（声明名替换成占位符，改名也能对上）
+python3 scripts/agda_dedup.py body --root . --filter /Real
+
+# 并入 module _ 块内同级声明（块内只比定义体，不比半截的类型）
+python3 scripts/agda_dedup.py body --root . --blocks
+
+# 近似档：长度比 → token Jaccard → difflib，专找「类型不同、证明写法近似」
+python3 scripts/agda_dedup.py body --root . --near --top 30
+
+# 同名冲突：每个名字在各文件里是同体、同型还是异体
+python3 scripts/agda_dedup.py names --root .
+```
+
+三档语义：
+
+| 档 | 判据 | 能回答什么 | 不能回答什么 |
+|---|---|---|---|
+| 逐字 | `decl_body` 归一（去注释、压空白、声明名→占位）+ sha256 | 「这段证明是不是原样搬过来的」；改名复制也能对上 | 绑定变量改名、`where` 局部重排 |
+| `--alpha` | 逐字前再跑 `shape`，只归一 Pi 绑定变量 | Pi 绑定名不同的同体 | λ/where 的局部重命名；完整 alpha 等价用 `l1` 的 DEFEQ |
+| `--near` | 长度比 ≥0.5 → Jaccard ≥0.6×0.8 → difflib ≥ `--sim` | 「写法像、命题不同」的搬运候选 | 不判等价；相似度是筛子，必须人工看 |
+
+实测（ALMA 275 文件、2451 顶格声明、`--min-len 60`）：
+
+```
+bodies 1984 / decls 2451  files 275  exact-groups 7  involved 15      0.64 s
+bodies 2486（含 blocks 502）/ decls 2451  exact-groups 8  involved 17  1.05 s
+near 候选 1362 对（不含 --blocks）/ 1614 对（含 --blocks）            35.6 s
+names 同名组 44（涉及 95 条）  SAME-BODY 6  SAME-TYPE 3  DIFF 35      0.6 s
+```
+
+`--blocks` 多出来的第 8 组是 `arch`（`Log/Core.agda:300` ↔ `Sqrt/Core.agda:50`，
+49 字符，块内同体）；`--near` 在块内还多出 252 对（1614 − 1362），例如
+`lambek-in∘out` ↔ `lambek-out∘in`（0.977）。那 5 对「类型相同、定义体不同」的
+（`decide`/`upper-case`、`log-upper`、`log-member`/`log-of-member`、`counit`/`out∘in≈Fid`）
+不会进逐字档——它们本来就是两套证法，归 `scan` 的 SAME-TYPE 档。
+
+逐字档的 7 组里有 5 组是 `Cosmos/ContCategoryLemmas` ↔ `SketchPass/ContCategoryLemmas`
+的同名同体（`ShapeOf`/`PosOf`/`actSOf`），另有 `_∘ch_`、`assoc-iso-O/C` 等；这几组是
+`scan` 的类型形状档看不到的——它们类型文本本来就不同。`names` 的 6 组 SAME-BODY 可直接
+合并或转发，3 组 SAME-TYPE 要先看证法，35 组 DIFF 只是撞名。
+
+边界：
+
+- 默认只收顶格声明；加 `--blocks` 并入 `module _` 块体内 502 条（`--block-min-len 40`，
+  550 条里其余 48 条短于 40）。块内 `typ` 是半截的，只比定义体；`names` 仍只看顶格。
+- `--min-len 60` 是有意的：`= refl`、`= sym ...` 这类短体全库同形，不收就会把真候选淹掉。
+- `--near` 默认跳过类型形状相同的对——那一类归 `scan`/`l1`；要看全量加
+  `--include-same-type`。
+- 逐字档不判「能不能删」：同体只说明证明文本一样，是否合并仍要看调用点与导出面。
 
 ---
 

@@ -13,37 +13,37 @@ open import Data.Nat using (ℕ; zero; suc; _^_; s≤s; z≤n; _≥_)
 open import Data.Nat.Properties using
   (m≤m⊔n; m≤n⊔m; *-suc; m<m+n; m≤m+n; ^-monoʳ-≤; *-monoʳ-≤)
   renaming (≤-trans to ≤ℕ-trans; *-comm to *-commℕ; *-identityʳ to *-identityʳℕ)
-open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
 open import Data.Rational using
   (ℚ; 0ℚ; _⊓_; _⊔_; _+_; _-_; _*_; _<_; _≤_; ∣_∣; nonNegative; positive)
   renaming (-_ to neg)
 open import Data.Rational.Properties using
   (+-identityʳ; neg-distrib-+; neg-distribˡ-*; ≤-trans; <⇒≤; ≤-<-trans
   ; <-≤-trans; *-monoˡ-≤-nonNeg; *-monoʳ-≤-nonNeg; pos*pos⇒pos; positive⁻¹
-  ; ∣-p∣≡∣p∣; ∣p+q∣≤∣p∣+∣q∣; neg-antimono-<; +-mono-<; p≤q⇒p⊓q≡p
-  ; ⊓-comm; ⊔-comm)
+  ; *-zeroˡ; ∣-p∣≡∣p∣; ∣p+q∣≤∣p∣+∣q∣; neg-antimono-<; +-mono-<
+  ; p≤q⇒p⊓q≡p; ⊓-comm; ⊔-comm; ≮⇒≥; p≤q⊔p; <-irrefl; <-trans; ≤-refl)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_; cong; cong₂; sym; subst; subst₂)
-open import Relation.Binary.PropositionalEquality.Properties using (module ≡-Reasoning)
+  (_≡_; refl; cong; cong₂; sym; subst; subst₂; module ≡-Reasoning)
 open ≡-Reasoning
 
 open import Base.RationalRing using (neg-involutive)
 open import Real using (embed; ε; half; embed-mono-≤; embed-suc-pos; ε-half)
 open import Real.Archimedean using (ε-archimedean)
+open import Real.IntervalEquiv using (node; l; u; centre; l-mono; u-mono)
 open import Real.Interval using (RealI; δ; δ-pos; pos-pow)
-open import Real.IntervalEquiv using (node; l; u; centre; l-mono)
 open import Real.Interval.Arith using (0ℝ; _+ℝ_; _-ℝ_; negℝ)
-open import Real.Interval.Mul using (_*ℝ_)
-open import Real.Interval.Node using
-  (node-*ℝ; node-negℝ; centre-add; u-dyadic; centre-neg; l-neg; u-neg)
-open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-refl; ≈ℝ-sym; ≈ℝ-trans)
-open import Real.Interval.Order using (_<ℝ_)
-open import Real.Interval.OrderLaws using (<-+mono; <-neg; <-sub; ≈-<-resp)
 open import Real.Interval.ArithLaws using
   (x-ℝx; +ℝ-assoc; +ℝ-inverseˡ; +ℝ-identityˡ; +ℝ-identityʳ)
-open import Real.Interval.Mul.Laws using (*ℝ-distribʳ-+)
+open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-refl; ≈ℝ-sym; ≈ℝ-trans)
 open import Real.Interval.Kit using
   (n≤2n; *-mono-≤-nonNeg; recip-antitone; ≈ℝ-of-eq)
+open import Real.Interval.Mul using (_*ℝ_)
+open import Real.Interval.Mul.Laws using (*ℝ-distribʳ-+; *ℝ-comm)
+open import Real.Interval.Node using
+  (node-*ℝ; node-negℝ; centre-add; u-dyadic; l-dyadic; centre-neg; l-neg; u-neg)
+open import Real.Interval.Order using (_<ℝ_)
+open import Real.Interval.OrderComplete.Base using (_≤ℝ_; ≤ℝ-trans)
+open import Real.Interval.OrderLaws using (<-+mono; <-neg; <-sub; ≈-<-resp)
 open import Real.Interval.Rational using (sub-add; max-neg; min-neg)
 
 ------------------------------------------------------------------------
@@ -483,6 +483,19 @@ pos*pos a b (n , δn<lan) (m , δm<lbm) = K , goal
                     (<-≤-trans δK<LM LM≤la'lb'))
 
 ------------------------------------------------------------------------
+-- Subtraction distributes over multiplication
+--
+-- 减法与乘法分配
+
+mul-sub-distrib : (a b c : RealI) →
+  (a -ℝ b) *ℝ c ≈ℝ a *ℝ c -ℝ b *ℝ c
+mul-sub-distrib a b c =
+  ≈ℝ-trans (*ℝ-distribʳ-+ c a (negℝ b))
+  (≈ℝ-trans
+    (+ℝ-cong (≈ℝ-refl {a *ℝ c}) (≈ℝ-sym (negℝ-*ℝ b c)))
+    (≈ℝ-sym (≈ℝ-refl {a *ℝ c -ℝ b *ℝ c})))
+
+------------------------------------------------------------------------
 -- Strict order is preserved by multiplication
 --
 -- 乘法保持严格序
@@ -497,11 +510,7 @@ pos*pos a b (n , δn<lan) (m , δm<lbm) = K , goal
     0<prod = pos*pos (y -ℝ x) z 0<y-x 0<z
 
     distrib : (y -ℝ x) *ℝ z ≈ℝ y *ℝ z -ℝ x *ℝ z
-    distrib =
-      ≈ℝ-trans (*ℝ-distribʳ-+ z y (negℝ x))
-      (≈ℝ-trans
-        (+ℝ-cong (≈ℝ-refl {y *ℝ z}) (≈ℝ-sym (negℝ-*ℝ x z)))
-        (≈ℝ-sym (≈ℝ-refl {y *ℝ z -ℝ x *ℝ z})))
+    distrib = mul-sub-distrib y x z
 
     0<diff : 0ℝ <ℝ y *ℝ z -ℝ x *ℝ z
     0<diff = ≈-<-respʳ distrib 0<prod
@@ -520,3 +529,160 @@ pos*pos a b (n , δn<lan) (m , δm<lbm) = K , goal
           (+ℝ-cong (≈ℝ-refl {y *ℝ z}) (+ℝ-inverseˡ (x *ℝ z)))
           (+ℝ-identityʳ (y *ℝ z)))
   in ≈-<-trans-helper (≈ℝ-sym left-eq) added right-eq
+
+------------------------------------------------------------------------
+-- Non-negative multiplication
+--
+-- 非负乘法
+
+-- The dyadic tolerance is arbitrarily small at a sufficiently deep level.
+--
+-- 二进容差在足够深的层上可以任意小。
+δ-below : (g : ℚ) → 0ℚ < g → (k : ℕ) →
+  Σ ℕ (λ m → k ≤ℕ m × δ m < g)
+δ-below g 0<g k =
+  let
+    n , εn<g = ε-archimedean g 0<g
+    m = k ⊔ℕ n
+    k≤m = m≤m⊔n k n
+    n≤m = m≤n⊔m k n
+  in m , k≤m , ≤-<-trans (δ-mono n≤m) (≤-<-trans (δ≤ε n) εn<g)
+
+-- The largest corner at level zero bounds the product's upper endpoint.
+--
+-- 第零层的最大角给出乘积上端点的下界。
+u-corner-0 : (a b : RealI) → u a 0 * u b 0 ≤ u (a *ℝ b) 0
+u-corner-0 a b =
+  let
+    chain : u a 0 * u b 0 ≤ u (node a 0 *ℝ node b 0) 0
+    chain =
+      ≤-trans
+        (p≤q⊔p (u a 0 * l b 0) (u a 0 * u b 0))
+        (p≤q⊔p ((l a 0 * l b 0) ⊔ (l a 0 * u b 0))
+                ((u a 0 * l b 0) ⊔ (u a 0 * u b 0)))
+  in subst (λ z → u a 0 * u b 0 ≤ z)
+           (sym (cong RealI.u (node-*ℝ a b 0)))
+           chain
+
+-- At level n the upper corner at level 2n bounds the product.
+--
+-- 第 n 层的上端角由第 2n 层的上端点给出下界。
+u-prod-corner : (x y : RealI) (n : ℕ) →
+  u x (2 ℕ* n) * u y (2 ℕ* n) ≤ u (x *ℝ y) n
+u-prod-corner x y n =
+  subst (λ z → u x (2 ℕ* n) * u y (2 ℕ* n) ≤ z)
+        (sym (cong RealI.u (node-*ℝ x y n)))
+        (u-corner-0 (node x (2 ℕ* n)) (node y (2 ℕ* n)))
+
+-- The lower endpoint of the zero interval at level m.
+--
+-- 零区间在第 m 层的下端点。
+l-0 : ∀ m → l 0ℝ m ≡ neg (δ m)
+l-0 m =
+  begin
+    l 0ℝ m
+  ≡⟨ l-dyadic 0ℚ m ⟩
+    neg (δ m) + 0ℚ
+  ≡⟨ +-identityʳ (neg (δ m)) ⟩
+    neg (δ m)
+  ∎
+
+-- A non-negative real has no negative upper endpoint at any level.
+--
+-- 非负实数的任何一层上端点都不为负。
+u-nonNeg : (x : RealI) → 0ℝ ≤ℝ x → (k : ℕ) → 0ℚ ≤ u x k
+u-nonNeg x x≥0 k =
+  ≮⇒≥ (λ uk<0 →
+    let
+      g = neg (u x k)
+      0<g : 0ℚ < g
+      0<g = neg-antimono-< uk<0
+      sel = δ-below g 0<g k
+      m = proj₁ sel
+      k≤m = proj₁ (proj₂ sel)
+      δm<g = proj₂ (proj₂ sel)
+      uk≡ : u x k ≡ neg g
+      uk≡ = sym (neg-involutive (u x k))
+      below : u x k < neg (δ m)
+      below = subst (λ z → z < neg (δ m)) (sym uk≡) (neg-antimono-< δm<g)
+      um< : u x m < neg (δ m)
+      um< = ≤-<-trans (u-mono x k≤m) below
+    in x≥0 (m , subst (λ z → u x m < z) (sym (l-0 m)) um<))
+
+-- A product of non-negative reals is non-negative.
+--
+-- 非负实数之积非负。
+*ℝ-nonNeg : (x y : RealI) → 0ℝ ≤ℝ x → 0ℝ ≤ℝ y → 0ℝ ≤ℝ (x *ℝ y)
+*ℝ-nonNeg x y x≥0 y≥0 (n , h) =
+  let
+    c = u x (2 ℕ* n) * u y (2 ℕ* n)
+    0≤0y : 0ℚ ≤ 0ℚ * u y (2 ℕ* n)
+    0≤0y = subst (λ z → 0ℚ ≤ z) (sym (*-zeroˡ (u y (2 ℕ* n)))) (≤-refl {0ℚ})
+    0≤c : 0ℚ ≤ c
+    0≤c = ≤-trans 0≤0y
+             (*-monoʳ-≤-nonNeg (u y (2 ℕ* n))
+               {{nonNegative (u-nonNeg y y≥0 (2 ℕ* n))}}
+               (u-nonNeg x x≥0 (2 ℕ* n)))
+    0≤u : 0ℚ ≤ u (x *ℝ y) n
+    0≤u = ≤-trans 0≤c (u-prod-corner x y n)
+    u<neg : u (x *ℝ y) n < neg (δ n)
+    u<neg = subst (λ z → u (x *ℝ y) n < z) (l-0 n) h
+    negδ<0 : neg (δ n) < 0ℚ
+    negδ<0 = neg-antimono-< (δ-pos n)
+    u<0 : u (x *ℝ y) n < 0ℚ
+    u<0 = <-trans u<neg negδ<0
+  in <-irrefl refl (≤-<-trans 0≤u u<0)
+
+-- Non-strict order is preserved by equivalence on the left.
+--
+-- 非严格序在左侧对等价封闭。
+≤-resp-≈ˡ : {x y z : RealI} → x ≈ℝ y → x ≤ℝ z → y ≤ℝ z
+≤-resp-≈ˡ {x} {y} {z} x≈y x≤z z<y = x≤z (≈-<-respʳ (≈ℝ-sym x≈y) z<y)
+
+-- Non-strict order is preserved by equivalence on the right.
+--
+-- 非严格序在右侧对等价封闭。
+≤-resp-≈ʳ : {x y z : RealI} → x ≤ℝ y → y ≈ℝ z → x ≤ℝ z
+≤-resp-≈ʳ {x} {y} {z} x≤y y≈z z<x = x≤y (≈-<-resp (≈ℝ-sym y≈z) z<x)
+
+-- Multiplication by a non-negative factor preserves non-strict order.
+--
+-- 非负因子保持非严格序。
+*ℝ-≤-mono : (x y z : RealI) → x ≤ℝ y → 0ℝ ≤ℝ z →
+  x *ℝ z ≤ℝ y *ℝ z
+*ℝ-≤-mono x y z x≤y 0≤z r =
+  let
+    sum-to-y : (y -ℝ x) +ℝ x ≈ℝ y
+    sum-to-y =
+      ≈ℝ-trans (+ℝ-assoc y (negℝ x) x)
+      (≈ℝ-trans
+        (+ℝ-cong (≈ℝ-refl {y}) (+ℝ-inverseˡ x))
+        (+ℝ-identityʳ y))
+    0≤d : 0ℝ ≤ℝ (y -ℝ x)
+    0≤d h =
+      x≤y (≈-<-trans-helper (≈ℝ-sym sum-to-y)
+             (<-+mono (y -ℝ x) 0ℝ x h)
+             (+ℝ-identityˡ x))
+    0≤dz : 0ℝ ≤ℝ (y -ℝ x) *ℝ z
+    0≤dz = *ℝ-nonNeg (y -ℝ x) z 0≤d 0≤z
+    shifted : y *ℝ z -ℝ x *ℝ z <ℝ 0ℝ
+    shifted = ≈-<-respʳ (x-ℝx (x *ℝ z))
+                (<-sub (y *ℝ z) (x *ℝ z) (x *ℝ z) r)
+    corner : (y -ℝ x) *ℝ z <ℝ 0ℝ
+    corner = ≈-<-resp (≈ℝ-sym (mul-sub-distrib y x z)) shifted
+  in 0≤dz corner
+
+-- Squaring is monotone on non-negative reals.
+--
+-- 平方在非负实数上单调。
+*ℝ-square-mono : (x y : RealI) → 0ℝ ≤ℝ x → x ≤ℝ y →
+  x *ℝ x ≤ℝ y *ℝ y
+*ℝ-square-mono x y 0≤x x≤y =
+  let
+    0≤y : 0ℝ ≤ℝ y
+    0≤y = ≤ℝ-trans 0≤x x≤y
+    left : x *ℝ x ≤ℝ x *ℝ y
+    left = ≤-resp-≈ʳ (*ℝ-≤-mono x y x x≤y 0≤x) (≈ℝ-sym (*ℝ-comm x y))
+    right : x *ℝ y ≤ℝ y *ℝ y
+    right = *ℝ-≤-mono x y y x≤y 0≤y
+  in ≤ℝ-trans left right

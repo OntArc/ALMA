@@ -1,5 +1,5 @@
 ------------------------------------------------------------------------
--- Left ℚ-bilinearity of the quadratic Poisson bracket
+-- Left ℚ-bilinearity of the quadratic Poisson quad-bracket
 --
 --   {f + g, h} = {f,h} + {g,h},   {r f, g} = r {f,g}.
 --
@@ -24,7 +24,7 @@ open import Relation.Binary.PropositionalEquality using
 open ≡-Reasoning
 
 open import Physics.Newton.Quadratic using
-  (obs; bracket; add; scale; twoℚ; fourℚ; mkObs)
+  (obs; quad-bracket; quad-add; quad-scale; twoℚ; fourℚ; mkObs)
 open import Base.RationalRing using
   (+interchange; pairs4; frontS; factor4; front-negS)
 
@@ -73,7 +73,7 @@ private
 -- 第一参数的加法线性
 
 bracket-addˡ : ∀ f g h →
-               bracket (add f g) h ≡ add (bracket f h) (bracket g h)
+               quad-bracket (quad-add f g) h ≡ quad-add (quad-bracket f h) (quad-bracket g h)
 bracket-addˡ (obs _ a b d e f) (obs _ a' b' d' e' f')
              (obs _ A B D E F) = mkObs c-c q-c p-c d-c e-c f-c
   where
@@ -189,7 +189,7 @@ bracket-addˡ (obs _ a b d e f) (obs _ a' b' d' e' f')
 -- 第一参数的数乘线性
 
 bracket-scaleˡ : ∀ r f g →
-                 bracket (scale r f) g ≡ scale r (bracket f g)
+                 quad-bracket (quad-scale r f) g ≡ quad-scale r (quad-bracket f g)
 bracket-scaleˡ r (obs _ a b d e f) (obs _ A B D E F) =
   mkObs c-c q-c p-c d-c e-c f-c
   where

@@ -46,13 +46,13 @@ open import Real.IntervalEquiv using
 open import Real.Interval.Kit using
   (tail-bound; ≈ℝ-of-rec; strict-recip; recipPow2-mono; two-half; half≤1)
 open import Real.Interval.OrderComplete.Base using
-  (Subset; Located; Bracket; _≤ℝ_; δ-dec; a+d≡b)
+  (Subset; Located; Bracket; _≤ℝ_; δ-dec; a+d≡b; ≤ℝ-trans)
 open import Real.Interval.OrderComplete.Bisect using
   (bw; bw-pos; bw-nn; initBracket; widenBracket; cbr-seq; cwb; step₃-a≤a
   ; step₃-b≤b; step₃-shrink)
 open import Real.Interval.RegularRep using (reg; i; width-i; fold≥k+4)
 open import Real.Interval.OrderLe using
-  (≤ℝ-refl; ≤ℝ-trans; ≤ℝ-resp-≈; <⇒≤ℝ; <-≤ℝ-trans)
+  (≤ℝ-refl; ≤ℝ-resp-≈; <⇒≤ℝ; <-≤ℝ-trans)
 open import Real.Interval.Mul.Order using (≈-<-respʳ)
 open import Real.Interval.WeakArith using (recip-antitone-≤)
 open import Real.Interval.Node using (u-dyadic; l-dyadic)

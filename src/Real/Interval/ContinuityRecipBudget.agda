@@ -277,13 +277,13 @@ budget-split A B q = *-distribʳ-+ q A B
 --
 -- 宽度被缩放的二进因子控制
 
-width-small :
+width-small-quant :
   (r : RealI) (N n : ℕ) (q : ℚ) →
   width r 0 ≤ embed N →
   0ℚ ≤ embed N →
   recip2^t n < q →
   width r n ≤ embed N * q
-width-small r N n q w0≤ 0≤N small =
+width-small-quant r N n q w0≤ 0≤N small =
   ≤-trans (width-deep r N n w0≤)
     (*-monoˡ-≤-nonNeg (embed N) {{nonNegative 0≤N}}
       (<⇒≤ small))

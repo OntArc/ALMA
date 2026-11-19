@@ -6,9 +6,9 @@
 --
 --   c + a q + b p + d q² + e qp + f p².
 --
--- They carry the canonical Poisson bracket {q,p} = 1. The bracket of
+-- They carry the canonical Poisson quad-bracket {q,p} = 1. The quad-bracket of
 -- two quadratics is again at most quadratic, so the space closes. This
--- slice fixes the bracket on the basis monomials; bilinearity,
+-- slice fixes the quad-bracket on the basis monomials; bilinearity,
 -- antisymmetry, the Jacobi identity and the harmonic oscillator follow
 -- in later slices.
 --
@@ -51,25 +51,25 @@ open Obs public
 -- Addition and ℚ-scaling are componentwise.
 --
 -- 加法与 ℚ-数乘按分量定义。
-add : Obs → Obs → Obs
-add (obs c a b d e f) (obs c' a' b' d' e' f') =
+quad-add : Obs → Obs → Obs
+quad-add (obs c a b d e f) (obs c' a' b' d' e' f') =
   obs (c + c') (a + a') (b + b') (d + d') (e + e') (f + f')
 
-scale : ℚ → Obs → Obs
-scale r (obs c a b d e f) =
+quad-scale : ℚ → Obs → Obs
+quad-scale r (obs c a b d e f) =
   obs (r * c) (r * a) (r * b) (r * d) (r * e) (r * f)
 
-neg : Obs → Obs
-neg (obs c a b d e f) = obs (- c) (- a) (- b) (- d) (- e) (- f)
+quad-neg : Obs → Obs
+quad-neg (obs c a b d e f) = obs (- c) (- a) (- b) (- d) (- e) (- f)
 
 -- Basis observables.
 --
 -- 基观测量。
-zero : Obs
-zero = obs 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ
+quad-zero : Obs
+quad-zero = obs 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ
 
-one : Obs
-one = obs 1ℚ 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ
+quad-one : Obs
+quad-one = obs 1ℚ 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ
 
 qO pO q²O qpO p²O : Obs
 qO   = obs 0ℚ 1ℚ 0ℚ 0ℚ 0ℚ 0ℚ
@@ -108,7 +108,7 @@ mkObs pc pa pb pd pe pf = let open ≡-Reasoning in begin
   obs _ _ _ _ _ _ ∎
 
 ------------------------------------------------------------------------
--- Canonical Poisson bracket
+-- Canonical Poisson quad-bracket
 --
 -- For f = Σ cᵢ mᵢ over the basis, {f,g} = f_q g_p − f_p g_q. Reading
 -- the elementary brackets {q,p} = 1 and the Leibniz rule off the basis
@@ -121,8 +121,8 @@ mkObs pc pa pb pd pe pf = let open ≡-Reasoning in begin
 -- Leibniz 法则在基上读出下列系数。每个输出系数均显式反对称：交换两个
 -- 参数即取负。
 
-bracket : Obs → Obs → Obs
-bracket (obs _ a b d e f) (obs _ a' b' d' e' f') =
+quad-bracket : Obs → Obs → Obs
+quad-bracket (obs _ a b d e f) (obs _ a' b' d' e' f') =
   obs
     -- {q,p} = 1
     (a * b' + - (b * a'))
@@ -137,12 +137,12 @@ bracket (obs _ a b d e f) (obs _ a' b' d' e' f') =
     -- p²: {qp,p²}=2p², {p²,qp}=-2p²
     (twoℚ * e * f' + - (twoℚ * f * e'))
 
-infix 6 bracket
+infix 6 quad-bracket
 
 ------------------------------------------------------------------------
--- Elementary bracket table
+-- Elementary quad-bracket table
 --
--- Each entry normalises the unit/zero factors (k*1 = k, k*0 = 0 and
+-- Each entry normalises the unit/quad-zero factors (k*1 = k, k*0 = 0 and
 -- 0 + k = k) and then matches the displayed basis observable.
 --
 -- 基本括号乘法表
@@ -151,30 +151,30 @@ infix 6 bracket
 -- 观测量匹配。
 
 -- {q,p} = 1.
-bracket-qp : bracket qO pO ≡ one
+bracket-qp : quad-bracket qO pO ≡ quad-one
 bracket-qp = cong (λ x → obs x 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ) (norm1 1ℚ)
 
 -- {q²,p} = 2q.
-bracket-q²p : bracket q²O pO ≡ scale twoℚ qO
+bracket-q²p : quad-bracket q²O pO ≡ quad-scale twoℚ qO
 bracket-q²p =
   cong (λ x → obs 0ℚ x 0ℚ 0ℚ 0ℚ 0ℚ) (norm-tail twoℚ)
 
 -- {q,p²} = 2p.
-bracket-qp² : bracket qO p²O ≡ scale twoℚ pO
+bracket-qp² : quad-bracket qO p²O ≡ quad-scale twoℚ pO
 bracket-qp² =
   cong (λ x → obs 0ℚ 0ℚ x 0ℚ 0ℚ 0ℚ) (norm-tail twoℚ)
 
 -- {q²,qp} = 2q².
-bracket-q²qp : bracket q²O qpO ≡ scale twoℚ q²O
+bracket-q²qp : quad-bracket q²O qpO ≡ quad-scale twoℚ q²O
 bracket-q²qp =
   cong (λ x → obs 0ℚ 0ℚ 0ℚ x 0ℚ 0ℚ) (norm-tail twoℚ)
 
 -- {qp,p²} = 2p².
-bracket-qpp² : bracket qpO p²O ≡ scale twoℚ p²O
+bracket-qpp² : quad-bracket qpO p²O ≡ quad-scale twoℚ p²O
 bracket-qpp² =
   cong (λ x → obs 0ℚ 0ℚ 0ℚ 0ℚ 0ℚ x) (norm-tail twoℚ)
 
 -- {q²,p²} = 4qp.
-bracket-q²p² : bracket q²O p²O ≡ scale fourℚ qpO
+bracket-q²p² : quad-bracket q²O p²O ≡ quad-scale fourℚ qpO
 bracket-q²p² =
   cong (λ x → obs 0ℚ 0ℚ 0ℚ 0ℚ x 0ℚ) (norm-tail fourℚ)

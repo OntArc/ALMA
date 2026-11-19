@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- Algebraic Newtonian mechanics: skew-symmetry and right linearity
 --
--- The quadratic Poisson bracket is skew-symmetric:
+-- The quadratic Poisson quad-bracket is skew-symmetric:
 --   {g, f} = - {f, g}.
 -- Together with the left linearity of the previous slice this yields
 -- linearity in the second argument, completing Q-bilinearity:
@@ -27,7 +27,7 @@ open import Relation.Binary.PropositionalEquality using
   (_≡_; sym; cong; cong₂; module ≡-Reasoning)
 
 open import Physics.Newton.Quadratic using
-  (obs; bracket; add; scale; neg; twoℚ; fourℚ; mkObs)
+  (obs; quad-bracket; quad-add; quad-scale; quad-neg; twoℚ; fourℚ; mkObs)
 open import Physics.Newton.QuadraticBilinear using (bracket-addˡ; bracket-scaleˡ)
 open import Base.RationalRing using (foldNeg; neg4; rot4; rev4; flip3)
 
@@ -37,7 +37,7 @@ open import Base.RationalRing using (foldNeg; neg4; rot4; rev4; flip3)
 -- 反对称
 
 -- {g, f} = - {f, g}.
-bracket-skew : ∀ f g → bracket g f ≡ neg (bracket f g)
+bracket-skew : ∀ f g → quad-bracket g f ≡ quad-neg (quad-bracket f g)
 bracket-skew (obs _ a b d e f) (obs _ a' b' d' e' f') =
   mkObs c-c q-c p-c d-c e-c f-c
   where
@@ -151,7 +151,7 @@ bracket-skew (obs _ a b d e f) (obs _ a' b' d' e' f') =
 -- 取负对观测量加法与数乘的分配
 
 -- - (f + g) = - f + - g.
-neg-add : ∀ f g → neg (add f g) ≡ add (neg f) (neg g)
+neg-add : ∀ f g → quad-neg (quad-add f g) ≡ quad-add (quad-neg f) (quad-neg g)
 neg-add (obs c a b d e f) (obs c' a' b' d' e' f') =
   mkObs (neg-distrib-+ c c') (neg-distrib-+ a a') (neg-distrib-+ b b')
         (neg-distrib-+ d d') (neg-distrib-+ e e') (neg-distrib-+ f f')
@@ -159,7 +159,7 @@ neg-add (obs c a b d e f) (obs c' a' b' d' e' f') =
 -- - (r f) = r (- f).
 --
 -- - (r f) = r (- f)。
-neg-scale : ∀ r f → neg (scale r f) ≡ scale r (neg f)
+neg-scale : ∀ r f → quad-neg (quad-scale r f) ≡ quad-scale r (quad-neg f)
 neg-scale r (obs c a b d e f) =
   mkObs (neg-distribʳ-* r c) (neg-distribʳ-* r a) (neg-distribʳ-* r b)
         (neg-distribʳ-* r d) (neg-distribʳ-* r e) (neg-distribʳ-* r f)
@@ -171,28 +171,28 @@ neg-scale r (obs c a b d e f) =
 
 -- {f, g + h} = {f, g} + {f, h}.
 bracket-addʳ : ∀ f g h →
-               bracket f (add g h) ≡ add (bracket f g) (bracket f h)
+               quad-bracket f (quad-add g h) ≡ quad-add (quad-bracket f g) (quad-bracket f h)
 bracket-addʳ f g h = let open ≡-Reasoning in begin
-    bracket f (add g h)
-  ≡⟨ bracket-skew (add g h) f ⟩
-    neg (bracket (add g h) f)
-  ≡⟨ cong neg (bracket-addˡ g h f) ⟩
-    neg (add (bracket g f) (bracket h f))
-  ≡⟨ neg-add (bracket g f) (bracket h f) ⟩
-    add (neg (bracket g f)) (neg (bracket h f))
-  ≡⟨ cong₂ add (sym (bracket-skew g f)) (sym (bracket-skew h f)) ⟩
-    add (bracket f g) (bracket f h) ∎
+    quad-bracket f (quad-add g h)
+  ≡⟨ bracket-skew (quad-add g h) f ⟩
+    quad-neg (quad-bracket (quad-add g h) f)
+  ≡⟨ cong quad-neg (bracket-addˡ g h f) ⟩
+    quad-neg (quad-add (quad-bracket g f) (quad-bracket h f))
+  ≡⟨ neg-add (quad-bracket g f) (quad-bracket h f) ⟩
+    quad-add (quad-neg (quad-bracket g f)) (quad-neg (quad-bracket h f))
+  ≡⟨ cong₂ quad-add (sym (bracket-skew g f)) (sym (bracket-skew h f)) ⟩
+    quad-add (quad-bracket f g) (quad-bracket f h) ∎
 
 -- {f, r g} = r {f, g}.
 bracket-scaleʳ : ∀ r f g →
-                 bracket f (scale r g) ≡ scale r (bracket f g)
+                 quad-bracket f (quad-scale r g) ≡ quad-scale r (quad-bracket f g)
 bracket-scaleʳ r f g = let open ≡-Reasoning in begin
-    bracket f (scale r g)
-  ≡⟨ bracket-skew (scale r g) f ⟩
-    neg (bracket (scale r g) f)
-  ≡⟨ cong neg (bracket-scaleˡ r g f) ⟩
-    neg (scale r (bracket g f))
-  ≡⟨ neg-scale r (bracket g f) ⟩
-    scale r (neg (bracket g f))
-  ≡⟨ cong (scale r) (sym (bracket-skew g f)) ⟩
-    scale r (bracket f g) ∎
+    quad-bracket f (quad-scale r g)
+  ≡⟨ bracket-skew (quad-scale r g) f ⟩
+    quad-neg (quad-bracket (quad-scale r g) f)
+  ≡⟨ cong quad-neg (bracket-scaleˡ r g f) ⟩
+    quad-neg (quad-scale r (quad-bracket g f))
+  ≡⟨ neg-scale r (quad-bracket g f) ⟩
+    quad-scale r (quad-neg (quad-bracket g f))
+  ≡⟨ cong (quad-scale r) (sym (bracket-skew g f)) ⟩
+    quad-scale r (quad-bracket f g) ∎
