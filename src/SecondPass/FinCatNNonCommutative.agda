@@ -42,7 +42,6 @@ open import Function.Base using (_∘_)
 open import SecondPass.Terminal using (_≈C_)
 open import SecondPass.FinCatNWitness
 open import SecondPass.FinCatNTowerLemmas
-open import SecondPass.FinCatNDefaultUnif
 open import SecondPass.FinCatNPermutedEmbedding
 
 module FinCatNNonCommutative (m' : ℕ) where

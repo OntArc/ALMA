@@ -100,7 +100,6 @@ module FinCatNFunctorial (m : ℕ) where
   tower-F₀-irrelevant-irrelevant : ∀ k →
     let L   = Tower.layer nTower k
         CN  = StrictLayer.C L
-        FCN = StrictLayer.FC L
     in
     ∀ {A B} (f g : Category._⇒_ CN A B)
     → tower-F₀-irrelevant k f ≡ tower-F₀-irrelevant k g

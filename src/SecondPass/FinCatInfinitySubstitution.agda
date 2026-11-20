@@ -13,13 +13,12 @@
 
 module SecondPass.FinCatInfinitySubstitution where
 
-open import Agda.Primitive using (Level)
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Level using (Lift; lift)
 open import Data.Product.Base using (proj₁; proj₂; _,_)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
-open import Relation.Binary.PropositionalEquality.Core using (cong; cong₂; sym; trans; subst)
-open import Relation.Binary.PropositionalEquality.Properties using (subst-∘; subst-sym-subst)
+open import Data.Unit.Polymorphic.Base using (⊤)
+open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans; subst)
+open import Relation.Binary.PropositionalEquality.Properties using (subst-sym-subst)
 
 open import Categories.Category.Core using (Category)
 open import Categories.Functor.Core using (Functor)
@@ -28,24 +27,21 @@ open import Categories.Functor using (id)
 open import Cosmos.ContCategory using (ContCat)
 open import Cosmos.ContCategoryLemmas using (ShapeOf; PosOf)
 open import Cosmos.ContCatEquiv using (ShapeCat)
-open import SecondPass.Unfolding using (Unfolding; module Unfolding)
-open import SecondPass.Cosmos using (Cosmos; out; _⇒ℱ[_]_; _⇒ℱ_; ⇒ℱLayer[_])
+open import SecondPass.Unfolding using (module Unfolding)
+open import SecondPass.Cosmos using (Cosmos; out; ⇒ℱLayer[_])
 open import SecondPass.MorphismObject using (MorphismObject)
-open import SecondPass.MorphismMorphism using (MorphismMorphism)
 open import SecondPass.FinCatNWitness using (module FinCatN)
 open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞)
 open import SecondPass.FinCatInfinityColimit using
-  (CompatibleTower; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX; id⇒ℱX; module TowerShapeFunctors)
+  (_⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX; module TowerShapeFunctors)
 open import SecondPass.FinCatInfinityColimitUniversal using
-  (_≈⇒ℱX_; ≈⇒ℱXLayer; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≈⇒ℱX-trans; ≡-to-≈⇒ℱX)
+  (_≈⇒ℱX_; ≈⇒ℱXLayer; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≡-to-≈⇒ℱX)
 
 open ⇒ℱLayer[_]
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
 open _≈⇒ℱX_
 open ≈⇒ℱXLayer
-open MorphismObject
-open MorphismMorphism
 
 -- Source substitution: transport a cross-category morphism along an
 -- equality of the source cosmos

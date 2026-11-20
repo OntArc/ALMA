@@ -32,7 +32,7 @@ open import Cosmos.ContCategoryLemmas using (ShapeOf; PosOf)
 open import SecondPass.Unfolding using (Unfolding; mapUnfolding)
 open import SecondPass.MorphismObject using (MorphismObject)
 open import SecondPass.Cosmos using (Cosmos; out; _⇒ℱ[_]_; _⇒ℱ_; ⇒ℱLayer[_])
-open import SecondPass.Terminal using (Coalgebra; CoalgHom; cosmosCoalg; _≈C_)
+open import SecondPass.Terminal using (CoalgHom; cosmosCoalg; _≈C_)
 open import SecondPass.CoalgCat using (_≈Coalg_)
 
 module _ {o h e s p : Level}
@@ -96,10 +96,8 @@ module _ {o h e s p : Level}
         in forget-helper h seed b'≡fseed
     }
     where
-      f  = Func.to (CoalgHom.f h)
       module fh = CoalgHom h
       UX  = out x
-      UFX = out (f x)
       UB  = out b
       module UX  = Unfolding UX
       module UB  = Unfolding UB
@@ -172,10 +170,7 @@ module _ {o h e s p : Level}
              → StandardConditions (forget-helper h x b≡fx)
 
       helper {b} x b≡fx .StandardConditions.uf-eq =
-        let UX = out x
-            UFX = out (f x)
-            UB = out b
-            eq-commute = fh.commute x
+        let eq-commute = fh.commute x
             eq-b = cong out b≡fx
         in trans (cong Unfolding.unfoldFunctor eq-commute)
                  (cong Unfolding.unfoldFunctor (sym eq-b))
@@ -191,8 +186,6 @@ module _ {o h e s p : Level}
 
       helper {b} x b≡fx .StandardConditions.recursive {A} sh =
         let UX = out x
-            UFX = out (f x)
-            UB = out b
             eq-commute = fh.commute x
             eq-b = cong out b≡fx
             b-next       = cong (λ u → Unfolding.unfold-next u sh) eq-b

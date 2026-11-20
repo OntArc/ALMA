@@ -27,7 +27,7 @@ open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _*_; _/_)
 open import Data.Integer using (1ℤ)
 open import Data.List.Base using (_∷_; [])
 open import Data.Unit.Base using (⊤)
-open import Data.Rational.Tactic.RingSolver as RationalRing
+open import Data.Rational.Tactic.RingSolver using (ring)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Reflection
 open import Tactic.RingSolver using (solve-macro)
@@ -56,7 +56,7 @@ macro
   solveℚ vars hole = do
     normalised-goal ← inferType hole >>= normalise
     solver-hole ← newMeta normalised-goal
-    solve-macro vars (quote RationalRing.ring) solver-hole
+    solve-macro vars (quote ring) solver-hole
     commitTC
     unify hole solver-hole
 

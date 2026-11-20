@@ -17,8 +17,6 @@
 
 module SecondPass.FinCatInfinityMediateUniqueness where
 
-open import Data.Nat using (ℕ)
-
 open import Categories.Functor using (id)
 
 open import SecondPass.Cosmos using (Cosmos)
@@ -28,10 +26,6 @@ open import SecondPass.FinCatInfinityColimit using
 open import SecondPass.FinCatInfinityColimitUniversal using
   (colimitCocone; _≈⇒ℱX_; ≈⇒ℱX-sym; ≈⇒ℱX-trans)
 open import SecondPass.FinCatInfinityMediate using (mediate; mediate-triangle)
-
-open _⇒ℱX[_]_
-open _≈⇒ℱX_
-open CompatibleTower
 
 -- Weak uniqueness: any h satisfying the triangle equation is
 -- _≈⇒ℱX_-equivalent to mediate on every cocone component

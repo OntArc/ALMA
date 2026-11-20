@@ -31,7 +31,7 @@ open import Relation.Nullary using (¬_)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Unit.Polymorphic.Base using (tt)
 open import Data.Product.Base using (_,_; proj₁; proj₂)
-open import Data.Fin using (Fin) renaming (zero to fzero; suc to fsuc)
+open import Data.Fin using () renaming (zero to fzero; suc to fsuc)
 
 open import Categories.Category.Core using (Category)
 open import Categories.Functor.Core using (Functor)
@@ -51,7 +51,6 @@ open StrictLayer
 open EmbeddingData
 open Unfolding
 open Tower
-open LimitLayer
 open _≈C_
 
 -- Parameterised construction over FinCatN m

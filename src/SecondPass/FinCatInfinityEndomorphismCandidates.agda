@@ -17,24 +17,19 @@
 module SecondPass.FinCatInfinityEndomorphismCandidates where
 
 open import Agda.Builtin.Equality using (refl)
-open import Level using (Lift; lift)
-open import Data.Nat using (ℕ)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
+open import Level using (lift)
+open import Data.Unit.Polymorphic.Base using (tt)
 
 open import Categories.Functor using (id)
 
-open import SecondPass.Cosmos using (Cosmos; out)
 open import SecondPass.MorphismObject using (MorphismObject)
 open import SecondPass.MorphismMorphism using (MorphismMorphism)
-open import SecondPass.FinCatNWitness using (module FinCatN)
-open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞; n-at)
 open import SecondPass.FinCatInfinityColimit using
-  (CompatibleTower; subtower; towerColimit; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX; id⇒ℱX)
+  (CompatibleTower; subtower; towerColimit; _⇒ℱX[_]_; ⇒ℱXLayer[_]; id⇒ℱX)
 open import SecondPass.FinCatInfinityColimitUniversal using (comp⇒ℱX-id-left)
 
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
-open CompatibleTower
 
 -- Candidate C-1: identity at the head
 --

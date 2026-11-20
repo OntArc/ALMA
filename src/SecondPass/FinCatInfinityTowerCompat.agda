@@ -31,32 +31,27 @@ module SecondPass.FinCatInfinityTowerCompat where
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Level using (lift)
 open import Data.Unit.Polymorphic.Base using (tt)
-open import Data.Nat using (ℕ; zero; suc; _≤_; _<_; z≤n; s≤s; _⊓_)
-open import Data.Nat.Properties
-  using ( ≤-refl; ≤-trans; ≤-antisym; ≤-pred
-        ; m≤n⇒m≤1+n; m≤n⇒m<n∨m≡n; m≥n⇒m⊓n≡n
-        ; ⊓-assoc; ⊓-comm; 1+n≰n; n≮n )
+open import Data.Nat using (ℕ; suc; s≤s; _⊓_)
+open import Data.Nat.Properties using
+  (≤-refl; ≤-trans; ≤-antisym; m≤n⇒m≤1+n; m≥n⇒m⊓n≡n; ⊓-assoc; ⊓-comm; 1+n≰n)
 open import Data.Fin.Base using (Fin; toℕ; inject₁)
-open import Data.Fin.Properties using (toℕ-inject₁; toℕ-injective; toℕ<n)
+open import Data.Fin.Properties using (toℕ-injective)
 open import Data.Sum.Base using (inj₁; inj₂)
 open import Data.Product.Base using (_,_)
-open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Empty using (⊥-elim)
 open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans)
 open import Relation.Binary.PropositionalEquality.Properties using (module ≡-Reasoning)
 open ≡-Reasoning
-open import Function.Base using (_∘_)
 
 open import Categories.Functor.Core using (Functor)
 
 open import SecondPass.Cosmos using (Cosmos; out)
-open import SecondPass.Unfolding using (Unfolding; module Unfolding)
+open import SecondPass.Unfolding using (module Unfolding)
 open import SecondPass.Terminal using (_≈C_)
 open _≈C_
 open import SecondPass.FinCatNWitness
-open import SecondPass.FinCatInfinity
 open import SecondPass.FinCatInfinityProjection
-open import Cosmos.Carried.LimitSystem
-  using (n-at; cl; cl-toℕ; ≤-or->)
+open import Cosmos.Carried.LimitSystem using (n-at; cl; cl-toℕ; ≤-or->)
 open import Cosmos.Carried.FinProj using (clamp-val)
 open import Cosmos.Carried.FinColimit using (inj-cl)
 open import Cosmos.Carried.FinEmbed
@@ -69,10 +64,8 @@ module FinCatTowerCompat (m : ℕ) where
   module PS = FinCatNColimitProjection (suc m)
   open M
   open S using () renaming (n to n′; FinCatN to FinCatN′; TrivialFCN to TrivialFCN′)
-  open PM using ( extendFin; defaultFin; projCosmos; cosmos-mapN
-                ; projCosmos-F₀-spec )
-  open PS using () renaming ( extendFin to extendFin′; defaultFin to defaultFin′
-                            ; projCosmos to projCosmos′; cosmos-mapN to cosmos-mapN′ )
+  open PM using (extendFin; defaultFin; projCosmos; cosmos-mapN; projCosmos-F₀-spec)
+  open PS using () renaming (extendFin to extendFin′; projCosmos to projCosmos′)
 
   -- n′ = suc n definitionally (n-at (suc m) = suc (n-at m)).
   -- n′ = suc n（定义性，n-at (suc m) = suc (n-at m)）。

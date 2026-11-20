@@ -43,7 +43,7 @@ open import Categories.Functor using (id; _∘F_)
 open import Cosmos.ContCategory using (ContCat)
 open import Cosmos.ContCategoryLemmas using (ShapeOf; PosOf)
 open import Cosmos.ContCatEquiv using (ShapeCat)
-open import SecondPass.Unfolding using (Unfolding; module Unfolding)
+open import SecondPass.Unfolding using (module Unfolding)
 open import SecondPass.MorphismObject
   using (MorphismObject; idMorphismObject; compMorphismObject)
 open import SecondPass.MorphismMorphism
@@ -55,8 +55,7 @@ open import SecondPass.FinCatNWitness using (module FinCatN)
 open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞; n-at)
 open import SecondPass.FinCatInfinityProjection
   using (module FinCatNColimitProjection)
-open FinCatNColimitProjection
-  using (extendFin; defaultFin; projCosmos; projCosmos-F₀-spec; cl-self)
+open FinCatNColimitProjection using (extendFin; projCosmos; projCosmos-F₀-spec)
 open import SecondPass.FinCatInfinityTowerCompat using (module FinCatTowerCompat)
 open import Cosmos.Carried.LimitSystem using (cl; ≤-or->)
 
@@ -144,7 +143,6 @@ comp⇒ℱX {S₁ = S₁} {S₂ = S₂} {F = F} {G = G} {H = H} g f .out = recor
                    (onunfold-next (f .out) s′)
   }
   where
-    open MorphismObject
     module S₁ = Functor S₁
     UF  = out F; UG = out G; UH = out H
     stF = shapeTrans (f .out); stG = shapeTrans (g .out)
@@ -218,7 +216,6 @@ module ProjCosmosMorphism (m : ℕ) where
 module EmbedCosmosMorphism (m : ℕ) where
   open TowerShapeFunctors m
   open FinCatTowerCompat m using (embedCosmos)
-  open FinCatN m
   module S-embed = Functor S-embed
 
   -- The total clamp predecessor of an inject₁ image at stage suc m is the

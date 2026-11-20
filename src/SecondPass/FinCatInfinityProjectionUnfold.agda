@@ -14,34 +14,27 @@
 
 module SecondPass.FinCatInfinityProjectionUnfold where
 
-open import Agda.Primitive using (Level)
 open import Agda.Builtin.Equality using (_≡_; refl)
-open import Level using (Lift; lift)
-open import Data.Nat using (ℕ; zero; suc; _+_; _∸_; _≤_; _≤?_; z≤n; s≤s; ≤-pred)
+open import Level using (lift)
+open import Data.Nat using (_∸_; _≤_; ≤-pred)
 open import Data.Fin.Base using (Fin; toℕ)
 open import Data.Fin.Properties using (toℕ<n)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
+open import Data.Unit.Polymorphic.Base using (tt)
 open import Relation.Binary.PropositionalEquality.Core using
   (cong; cong₂; sym; trans; subst)
-open import Relation.Binary.PropositionalEquality.Properties using
-  (J; subst-∘; subst-sym-subst; trans-symˡ; module ≡-Reasoning)
-
-open import Categories.Functor using (id)
+open import Relation.Binary.PropositionalEquality.Properties using (J)
 
 open import SecondPass.Unfolding using (Unfolding)
 open Unfolding using (unfold-next)
 open import SecondPass.Cosmos using (Cosmos; out)
-open import SecondPass.FinCatNWitness using (module FinCatN)
 open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞; n-at)
-open import SecondPass.FinCatInfinityProjection using
-  (module FinCatNColimitProjection)
-open FinCatNColimitProjection using
-  (defaultFin; defaultFin-toℕ-self; projCosmos; projCosmos-F₀-spec)
+open import SecondPass.FinCatInfinityProjection using (module FinCatNColimitProjection)
+open FinCatNColimitProjection using (defaultFin; projCosmos)
 open import SecondPass.FinCatInfinityColimit using
   (CompatibleTower; subtower; towerColimit; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX
   ; module TowerShapeFunctors; module ProjCosmosMorphism)
 open import SecondPass.FinCatInfinityColimitUniversal using
-  (colimitCocone; _≈⇒ℱX_; ≈⇒ℱXLayer; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≈⇒ℱX-trans
+  (colimitCocone; _≈⇒ℱX_; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≈⇒ℱX-trans
   ; ≡-to-≈⇒ℱX; comp⇒ℱX-cong-≈⇒ℱX)
 open import SecondPass.FinCatInfinitySubstitution
 
@@ -156,9 +149,7 @@ subst-dst-≈⇒ℱX tower m A =
 -- projCosmos-morphism 的 unfold-next 用目标端替换表示
 f-onunfold-next-eq :
   ∀ (tower : CompatibleTower) m (A : Fin (n-at m))
-  → let k  = toℕ A
-        x  = unfold-next (out (seq tower m)) {A = A} (lift tt)
-        x' = unfold-next (out (seq tower m)) {A = defaultFin m k} (lift tt)
+  → let x  = unfold-next (out (seq tower m)) {A = A} (lift tt)
         eq = defaultFin-src-eq tower A
         S  = TowerShapeFunctors.S-proj m
         f  = ProjCosmosMorphism.projCosmos-morphism m (CompatibleTower.seq tower m)
@@ -178,7 +169,6 @@ subst-src-projCosmos-eq-onunfold :
   → let k  = toℕ A
         x' = unfold-next (out (seq tower m)) {A = defaultFin m k} (lift tt)
         eq = defaultFin-src-eq tower A
-        S  = TowerShapeFunctors.S-proj m
         f  = ProjCosmosMorphism.projCosmos-morphism m (CompatibleTower.seq tower m)
     in  subst-src-FinCatN (sym eq)
           (ProjCosmosMorphism.projCosmos-morphism m x')
@@ -192,10 +182,8 @@ subst-src-projCosmos-eq-onunfold tower m A
 --
 -- projCosmos-morphism 的 unfold-next 等式的对称形式
 projCosmos-morphism-unfold-sym : ∀ (tower : CompatibleTower) m (A : Fin (n-at m))
-  → let src-A = unfold-next (out (seq tower m)) {A = A} (lift tt)
-        x'    = unfold-next (out (seq tower m)) {A = defaultFin m (toℕ A)} (lift tt)
+  → let x'    = unfold-next (out (seq tower m)) {A = defaultFin m (toℕ A)} (lift tt)
         eq    = defaultFin-src-eq tower A
-        S     = TowerShapeFunctors.S-proj m
     in  ProjCosmosMorphism.projCosmos-morphism m (seq tower m)
           .out .onunfold-next {A = A} (lift tt)
         ≡ subst-src-FinCatN (sym eq)
@@ -254,14 +242,12 @@ cosmos-from-unfolding u .out = u
 -- colimitCocone 的 unfold-next，通过源端替换与子塔的 colimitCocone 关联
 colimitCocone-onunfold-next : ∀ (tower : CompatibleTower) m (A : Fin (n-at m))
   → let k = toℕ A
-        Y = towerColimit (subtower tower k)
     in  subst-src-FinCatN (sym (defaultFin-src-eq tower A))
           (colimitCocone (subtower tower k) m)
         ≈⇒ℱX
         (colimitCocone tower m .out .onunfold-next {A = A} (lift tt))
 colimitCocone-onunfold-next tower m A =
-  let k  = toℕ A
-      eq = defaultFin-src-eq tower A
+  let eq = defaultFin-src-eq tower A
   in ≈⇒ℱX-trans
        (≡-to-≈⇒ℱX (comp⇒ℱX-subst-src (sym eq)))
        (comp⇒ℱX-cong-≈⇒ℱX

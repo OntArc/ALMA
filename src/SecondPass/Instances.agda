@@ -25,7 +25,7 @@
 
 module SecondPass.Instances where
 
-open import Agda.Primitive using (Level; _⊔_; lsuc; lzero)
+open import Agda.Primitive using (Level; _⊔_)
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Agda.Builtin.Sigma using (Σ)
 open import Relation.Binary.PropositionalEquality.Core
@@ -34,7 +34,6 @@ open import Relation.Binary.PropositionalEquality.Properties
   using (subst-subst; subst-sym-subst; module ≡-Reasoning)
 open import Relation.Binary.Structures using (IsEquivalence)
 open import Data.Product.Base using (_×_; _,_; proj₁; proj₂)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
 
 open import Categories.Category.Core using (Category)
 open import Categories.Functor.Core using (Functor)
@@ -72,10 +71,6 @@ module Instance-C {o h e s p : Level}
                   {FC : Functor C (ContCat s p)} where
 
   open ≡-Reasoning
-
-  private
-    module C  = Category C
-    module FC = Functor FC
 
   X-C : Set (o ⊔ h ⊔ e ⊔ s ⊔ p)
   X-C = Cosmos C FC
@@ -206,12 +201,6 @@ module Instance-F {o h e s p : Level}
                   {C : Category o h e}
                   {FC : Functor C (ContCat s p)} where
 
-  open ≡-Reasoning
-
-  private
-    module C  = Category C
-    module FC = Functor FC
-
   X-F : Set (o ⊔ h ⊔ e ⊔ s ⊔ p)
   X-F = Σ (Cosmos C FC) (λ F → Σ (Cosmos C FC) (λ G → F ⇒ℱ G))
 
@@ -278,7 +267,6 @@ module Instance-X {o h e o′ ℓ′ e′ s p : Level}
                   (S : Functor (ShapeCat C FC) (ShapeCat D FD)) where
 
   private
-    module C  = Category C
     module Sf = Functor S
 
   X-X : Set (o ⊔ h ⊔ e ⊔ o′ ⊔ ℓ′ ⊔ e′ ⊔ s ⊔ p)

@@ -16,15 +16,15 @@
 module SecondPass.FinCatInfinitySubCocone where
 
 open import Agda.Builtin.Equality using (_≡_; refl)
-open import Level using (Lift; lift)
+open import Level using (lift)
 open import Data.Empty using (⊥-elim)
-open import Data.Nat using (ℕ; zero; suc; _+_; _∸_; _≤_)
+open import Data.Nat using (ℕ; suc; _+_; _∸_; _≤_)
 open import Data.Nat.Properties using
   (≤-total; m+[n∸m]≡n; ≤-refl; ≤-trans; m≤n⇒m≤1+n; 1+n≰n; ≡-irrelevant)
 open import Data.Fin.Base using (Fin; toℕ)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
-open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans; subst)
+open import Data.Unit.Polymorphic.Base using (tt)
+open import Relation.Binary.PropositionalEquality.Core using (cong; sym; subst)
 open import Relation.Binary.PropositionalEquality.Properties using (J)
 
 open import Categories.Functor.Core using (Functor)
@@ -42,15 +42,14 @@ open import SecondPass.FinCatInfinityColimit using
   (CompatibleTower; subtower; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX
   ; module TowerShapeFunctors)
 open import SecondPass.FinCatInfinityColimitUniversal using
-  (_≈⇒ℱX_; ≈⇒ℱX-sym; ≈⇒ℱX-trans; ≡-to-≈⇒ℱX; lift-subtower
-  ; transport-to-S-proj; toℕ-defaultFin; split≤)
+  (_≈⇒ℱX_; ≡-to-≈⇒ℱX; lift-subtower; transport-to-S-proj; toℕ-defaultFin
+  ; split≤)
 open import SecondPass.FinCatInfinitySubstitution
 open import SecondPass.FinCatInfinityProjectionUnfold using
   (toℕ≤n∸1; defaultFin-src-eq)
 
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
-open CompatibleTower
 open _≈⇒ℱX_
 
 -- Sub-cocone component in the case k ≤ m
@@ -225,12 +224,6 @@ sub-cocone-correct-k≤m tower Y g m A k≤n∸1 =
     S : Functor (ShapeCat (FinCatN.FinCatN m) (FinCatN.TrivialFCN m))
                 (ShapeCat FinCat∞ TrivialFC∞)
     S = TowerShapeFunctors.S-proj m
-
-    src : Cosmos (FinCatN.FinCatN m) (FinCatN.TrivialFCN m)
-    src = CompatibleTower.seq (subtower tower k) m
-
-    Tgt : Cosmos FinCat∞ TrivialFC∞ → Set _
-    Tgt = λ Z → src ⇒ℱX[ S ] Z
 
     Yk : ℕ → Cosmos FinCat∞ TrivialFC∞
     Yk = λ j → unfold-next (out Y) {A = j} (lift tt)

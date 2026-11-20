@@ -24,19 +24,18 @@
 
 module SecondPass.FinCatInfinityProjection where
 
-open import Agda.Primitive using (_⊔_)
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Level using (lift)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
-open import Data.Nat using (ℕ; zero; suc; _∸_; _≤_; _<_; z≤n; s≤s; ≤-pred)
+open import Data.Unit.Polymorphic.Base using (tt)
+open import Data.Nat using (ℕ; zero; suc; ≤-pred)
 open import Data.Nat.Properties using (≤-trans; 1+n≢n; 1+n≰n)
 open import Data.Fin.Base using (Fin; toℕ; inject₁) renaming (zero to fzero; suc to fsuc)
 open import Data.Fin.Properties using (toℕ-inject₁; toℕ-injective; toℕ<n)
 open import Data.Product.Base using (Σ; _,_; proj₁)
 open import Data.Sum.Base using (inj₁; inj₂)
-open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Empty using (⊥-elim)
 open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans; _≢_)
+open import Relation.Binary.PropositionalEquality.Core using (cong; sym; _≢_)
 open import Relation.Binary.PropositionalEquality.Properties using (module ≡-Reasoning)
 open ≡-Reasoning
 open import Function.Base using (_∘_)
@@ -46,7 +45,7 @@ open import Categories.NaturalTransformation.Core using (ntHelper)
 open import Categories.NaturalTransformation.NaturalIsomorphism using (NaturalIsomorphism)
 
 open import SecondPass.Cosmos using (Cosmos; out)
-open import SecondPass.Unfolding using (Unfolding; module Unfolding)
+open import SecondPass.Unfolding using (module Unfolding)
 open import SecondPass.Terminal using (_≈C_)
 open _≈C_
 open import SecondPass.FinCatNWitness
@@ -59,7 +58,6 @@ module FinCatInfinityEmbedding (m : ℕ) where
 
   module M = FinCatN m
   module S = FinCatN (suc m)
-  open M
 
   -- Tower-family embedding: F₀ = inject₁, F₁ = tt
   -- 塔族嵌入：F₀ = inject₁，F₁ = tt

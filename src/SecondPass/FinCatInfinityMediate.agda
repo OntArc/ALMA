@@ -16,11 +16,11 @@
 module SecondPass.FinCatInfinityMediate where
 
 open import Agda.Builtin.Equality using (_≡_; refl)
-open import Level using (Lift; lift)
+open import Level using (lift)
 open import Data.Nat using (ℕ)
 open import Data.Fin.Base using (Fin; toℕ)
-open import Data.Unit.Polymorphic.Base using (⊤; tt)
-open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans; subst)
+open import Data.Unit.Polymorphic.Base using (tt)
+open import Relation.Binary.PropositionalEquality.Core using (sym)
 
 open import Categories.Category.Core using (Category)
 open import Categories.Functor using (id)
@@ -35,7 +35,7 @@ open import SecondPass.FinCatNWitness using (module FinCatN)
 open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞; n-at)
 open import SecondPass.FinCatInfinityColimit using
   (CompatibleTower; subtower; towerColimit; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX
-  ; id⇒ℱX; module TowerShapeFunctors)
+  ; module TowerShapeFunctors)
 open import SecondPass.FinCatInfinityColimitUniversal using
   (colimitCocone; _≈⇒ℱX_; ≈⇒ℱXLayer; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≈⇒ℱX-trans
   ; ≡-to-≈⇒ℱX; comp⇒ℱX-cong-≈⇒ℱX)
@@ -48,9 +48,6 @@ open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
 open _≈⇒ℱX_
 open ≈⇒ℱXLayer
-open CompatibleTower
-open MorphismObject
-open MorphismMorphism
 
 -- Mediating morphism from the colimit to Y, given a cocone g
 --

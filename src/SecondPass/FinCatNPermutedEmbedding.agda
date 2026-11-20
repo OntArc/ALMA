@@ -167,8 +167,6 @@ module FinCatNPermutedEmbedding (m : ℕ) where
       C'  = StrictLayer.C (Tower.layer nTower (suc k))
       FC' = StrictLayer.FC (Tower.layer nTower (suc k))
       SC' = ShapeCat C' FC'
-      id-SC' = Category.id SC'
-      id-C'  = Category.id C'
       pf₁ = permuted-F₁ k f x
     in record
     { unfoldFunctor = record

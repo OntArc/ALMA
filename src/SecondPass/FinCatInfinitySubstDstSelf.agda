@@ -17,7 +17,7 @@ module SecondPass.FinCatInfinitySubstDstSelf where
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Data.Product.Base using (proj₁; proj₂; _,_)
 open import Function.Base using (_∘_)
-open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans; subst)
+open import Relation.Binary.PropositionalEquality.Core using (cong; trans; subst)
 
 open import Categories.Category.Core using (Category)
 open import Categories.Functor.Core using (Functor)

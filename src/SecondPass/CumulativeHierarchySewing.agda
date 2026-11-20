@@ -46,7 +46,7 @@ open import SecondPass.CumulativeHierarchy
   using (π; Collapsible; collapsible→ShapeCat-collapsible; EmbeddingData
         ; EmbeddingFamily; UniformEmbeddingFamily; FC∘π)
 open import SecondPass.StrictLift
-  using (StrictLayer; strictEmbed; strictStep-suc; EmbedFamily; outer-rule)
+  using (StrictLayer; strictEmbed; EmbedFamily; outer-rule)
 open import SecondPass.CumulativeHierarchyInstances
   using (module BuildUniformFrom; module FinCatHierarchy)
 open FinCatHierarchy using (FinCat; FinFC; embedFin)
@@ -335,8 +335,6 @@ module DirectionDichotomy
   private
     C_L  = StrictLayer.C L
     FC_L = StrictLayer.FC L
-    FC'  = StrictLayer.FC (strictStep-suc L)
-    module C_L' = Category (ShapeCat C_L FC_L)
     module C_L  = Category C_L
 
   -- Rigidity: an endomorphism carries s to t only when s ≡ t.

@@ -15,16 +15,15 @@
 
 module SecondPass.FinCatInfinityColimitUniversal where
 
-open import Agda.Primitive using (Level; _⊔_)
+open import Agda.Primitive using (_⊔_)
 open import Agda.Builtin.Equality using (_≡_; refl)
 open import Level using (lift)
 open import Data.Unit.Polymorphic.Base using (tt)
-open import Data.Nat using (ℕ; zero; suc; _+_; _∸_; _≤_; _<_; z≤n; s≤s)
-open import Data.Nat.Properties
-  using ( +-identityʳ; +-suc; ≤-refl; ≤-trans; ≤-antisym; ≤-pred )
+open import Data.Nat using (ℕ; zero; suc; _+_; _∸_; _≤_; z≤n; s≤s)
+open import Data.Nat.Properties using
+  (+-identityʳ; +-suc; ≤-refl; ≤-antisym; ≤-pred)
 open import Data.Fin.Base using (Fin; toℕ; inject₁)
-open import Data.Fin.Properties
-  using (toℕ-inject₁; toℕ-injective; toℕ<n)
+open import Data.Fin.Properties using (toℕ-inject₁; toℕ-injective; toℕ<n)
 open import Data.Product.Base using (_,_; proj₁; proj₂)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
 open import Relation.Binary.PropositionalEquality.Core using (cong; sym; trans)
@@ -38,25 +37,22 @@ open import Categories.Functor using (id; _∘F_)
 open import Cosmos.ContCategory using (ContCat)
 open import Cosmos.ContCategoryLemmas using (ShapeOf; PosOf)
 open import Cosmos.ContCatEquiv using (ShapeCat)
-open import SecondPass.Unfolding using (Unfolding; module Unfolding)
+open import SecondPass.Unfolding using (module Unfolding)
 open import SecondPass.Cosmos using (Cosmos; out; _⇒ℱ_; ⇒ℱLayer[_])
 open import SecondPass.MorphismObject using (MorphismObject; compMorphismObject)
 open import SecondPass.MorphismMorphism using (MorphismMorphism; compMorphismMorphism)
 open import SecondPass.Terminal using (_≈C_; ≈C-refl; ≈C-sym; ≈C-trans)
 open import SecondPass.MorphismCorrespondence using (≈C→⇒ℱ)
 open import SecondPass.FinCatNWitness using (module FinCatN)
-open import SecondPass.FinCatInfinity
-  using (FinCat∞; TrivialFC∞; n-at)
-open import SecondPass.FinCatInfinityProjection
-  using (module FinCatNColimitProjection)
+open import SecondPass.FinCatInfinity using (FinCat∞; TrivialFC∞; n-at)
+open import SecondPass.FinCatInfinityProjection using (module FinCatNColimitProjection)
 open import SecondPass.FinCatInfinityTowerCompat using (module FinCatTowerCompat)
 open import Cosmos.Carried.LimitSystem using (cl; cl-toℕ; ≤-or->)
-open import Cosmos.Carried.FinEmbed
-  using (embedF-inject₁; embedF-newtop)
-open import SecondPass.FinCatInfinityColimit
-  using (CompatibleTower; subtower; towerColimit; towerColimit-spec
-        ; _⇒ℱX[_]_; ⇒ℱXLayer[_]; comp⇒ℱX; id⇒ℱX; module TowerShapeFunctors
-        ; module ProjCosmosMorphism; module EmbedCosmosMorphism)
+open import Cosmos.Carried.FinEmbed using (embedF-inject₁; embedF-newtop)
+open import SecondPass.FinCatInfinityColimit using
+  (CompatibleTower; subtower; towerColimit; towerColimit-spec; _⇒ℱX[_]_
+  ; ⇒ℱXLayer[_]; comp⇒ℱX; id⇒ℱX; module TowerShapeFunctors
+  ; module ProjCosmosMorphism; module EmbedCosmosMorphism)
 open FinCatNColimitProjection using (defaultFin)
 open _≈C_
 open ⇒ℱLayer[_]
@@ -271,8 +267,6 @@ comp⇒ℱX-id-left {S = S} {F = F} {G = G} {H = H} g f .out = record
             (⇒ℱXLayer[_].onunfold-next fLayer s′)
   }
   where
-    open MorphismObject
-    open MorphismMorphism
     module Sf = Functor S
     UF = out F
     UG = out G
