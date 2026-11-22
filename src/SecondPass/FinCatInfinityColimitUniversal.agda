@@ -55,10 +55,8 @@ open import SecondPass.FinCatInfinityColimit using
   ; module ProjCosmosMorphism; module EmbedCosmosMorphism)
 open FinCatNColimitProjection using (defaultFin)
 open _≈C_
-open ⇒ℱLayer[_]
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
-open CompatibleTower
 open MorphismObject
 open MorphismMorphism
 

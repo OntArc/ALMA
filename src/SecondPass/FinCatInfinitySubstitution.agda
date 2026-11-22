@@ -37,7 +37,6 @@ open import SecondPass.FinCatInfinityColimit using
 open import SecondPass.FinCatInfinityColimitUniversal using
   (_≈⇒ℱX_; ≈⇒ℱXLayer; ≈⇒ℱX-refl; ≈⇒ℱX-sym; ≡-to-≈⇒ℱX)
 
-open ⇒ℱLayer[_]
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
 open _≈⇒ℱX_

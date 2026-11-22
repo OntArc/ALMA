@@ -9,9 +9,9 @@
 
 ## Introduction / 简介
 
-ALMA is a formal framework grounded in type theory and category theory, whose central construction is the E-M-type (an indexed M-type over an edge family). Its core instance Cosmos—an infinite, unbounded, self-referential dynamic universe—provides a mathematical model for philosophical ontology research.
+ALMA is a formal framework grounded in type theory and category theory, whose central construction is the E-M type (an indexed M-type over an edge family). Its core instance, Cosmos—an infinite, unbounded, dynamic, and self-referential universe—provides a mathematical model for philosophical ontology research. The project's vision is to test the explanatory power and consistency of this framework through derived formal modules such as constructive real numbers (Real/) and constructive physics (Physics/).
 
-ALMA 是一个建立在类型论与范畴论之上的形式化框架，其中心构造是 E-M 型（边族上的索引 M 型）；Cosmos 是它的核心实例——一个无限、无界、动态且自我指涉的宇宙——为哲学本体论研究提供了数学模型。
+ALMA 是一个基于类型论与范畴论的形式化框架，其中心构造是 E-M 型（边族上的索引 M 型）；核心实例 Cosmos 是一个无限、无界、动态且自我指涉的宇宙——为哲学本体论研究提供了数学模型。项目的愿景是通过构造性实数 Real/，构造性物理 Physics/ 等派生形式化模块检验该框架的解释力与一致性。
 
 ## Motivation / 动机
 
@@ -54,8 +54,15 @@ Equivalence/ 层在观察等价层面呈现了同一收敛模式：所有的退�
 ```bash
 git clone https://github.com/OntArc/ALMA.git
 cd ALMA
+make everything
 agda -i src src/Everything.agda
 ```
+
+`Everything.agda` is generated automatically (by CI on every push, and
+locally by `make everything`); it is not maintained by hand.
+
+`Everything.agda` 由工具自动生成（CI 在每次 push 时生成，本地通过
+`make everything` 生成），不再手工维护。
 
 ## Architecture / 架构
 
@@ -98,9 +105,9 @@ rational continuum. It originated from the needs of the physical instances in `P
 
 ## Contributing / 贡献指南
 
-Discussions, proof ideas, literature references and code contributions are all welcome.
+Discussions, proof ideas, literature references and code contributions are all welcome. All contributions must follow the project's [CONTRIBUTING.md](CONTRIBUTING.md), include a DCO sign-off, and pass the project's CI and deduplication checks. The project follows the OpenSSF Best Practices Badge criteria (currently at the passing level; applicable silver-level criteria are tracked).
 
-欢迎参与讨论、提供证明思路与文献指引，或贡献代码。
+欢迎参与讨论、提供证明思路与文献指引，或贡献代码。所有贡献须遵循项目的 [CONTRIBUTING.md](CONTRIBUTING.md)，完成 DCO 签署，并通过项目的 CI 和查重检查。项目遵循 OpenSSF Best Practices 徽章条款（当前为 passing 级别，并跟踪适用的 silver 级别条款）。
 
 ## Preprint / 预印本
 

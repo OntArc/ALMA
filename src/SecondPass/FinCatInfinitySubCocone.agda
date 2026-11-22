@@ -50,7 +50,6 @@ open import SecondPass.FinCatInfinityProjectionUnfold using
 
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
-open _≈⇒ℱX_
 
 -- Sub-cocone component in the case k ≤ m
 --

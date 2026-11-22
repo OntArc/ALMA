@@ -897,8 +897,6 @@ private
   record ℕ' (ℓ : Level) : Set (lsuc ℓ) where
     constructor [_]
     field lower : ℕ
-  open ⊤'
-  open ℕ'
 streamToCosmos : {ℓ₁ ℓ₂ : Level} {O : Set ℓ₁} {C : Set ℓ₂}
                → Stream (O × C) → O → C → Cosmos (ℓ₁ ⊔ ℓ₂)
 streamToCosmos {ℓ₁} {ℓ₂} {O} {C} st o₀ c₀ .Cosmos.Obj = ⊤' (ℓ₁ ⊔ ℓ₂)

@@ -40,7 +40,6 @@ open import SecondPass.FinCatInfinitySubstitution
 
 open _⇒ℱX[_]_
 open ⇒ℱXLayer[_]
-open _≈⇒ℱX_
 open CompatibleTower
 
 -- defaultFin-src-eq: the unfold-next at A equals that at
