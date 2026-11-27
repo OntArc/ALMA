@@ -43,7 +43,7 @@ open import Real.Interval.Recip using (recipℝ)
 open import Real.Interval.RecipLaws using (recipℝ-pos; recipℝ-mul; recipℝ-cong)
 open import Real.Interval.Sqrt.Located using (P; P-0; located)
 open import Real.Interval.Sqrt.Bounds using
-  (sq-widen; embedℚ-reflect; l-layer-≤; u-layer-≤)
+  (sq-widen; embedℚ-reflect; embedℚ-≤; l-layer-≤; u-layer-≤)
 open import Real.Interval.Sqrt.Core using
   (sqrtℝ; sqrt-upper; sqrt-least; sqrt-nonNeg; rq; isUpper)
 
@@ -54,7 +54,7 @@ open import Real.Interval.Sqrt.Core using
 
 -- Monotonicity and strict positivity follow directly from the
 -- order-complete interface: every member of P y is a member of P z when
--- y ≤ z, and a small rational square below y gives a positive member.
+-- y ≤ z, and a small rational square below y gives a positive member
 -- The identity sqrt y * sqrt y ≈ y needs a two-sided squeeze and is left
 -- to a later slice.
 --
@@ -171,21 +171,6 @@ sq-of-upper : (y : RealI) (0y : 0ℝ <ℝ y) (u : RealI)
             → 0ℝ ≤ℝ u → ((x : RealI) → P y 0y x → x <ℝ u)
             → y ≤ℝ u *ℝ u
 sq-of-upper y 0y u 0≤u ub uu<y = <-irrefl u (ub u (0≤u , uu<y))
-
-------------------------------------------------------------------------
--- Embedding preserves the non-strict order
---
--- 嵌入保持非严格序
-
--- Reflection of the embedded strict order turns the rational bound inside
--- out: were embed q below embed p, then q < p while p ≤ q.
---
--- 嵌入严格序的反射把有理界翻出来：若 embed q 低于 embed p，则 q < p，
--- 与 p ≤ q 冲突。
-embedℚ-≤ : (p q : ℚ) → p ≤ q → embedℚ p ≤ℝ embedℚ q
-embedℚ-≤ p q p≤q h =
-  ℚP.<-irrefl refl
-    (ℚP.≤-<-trans p≤q (embedℚ-reflect q p h))
 
 ------------------------------------------------------------------------
 -- Lower half of the square identity: y ≤ sqrt y * sqrt y
@@ -475,7 +460,7 @@ sqrt-unique y 0y s 0≤s ss≈y =
 
 -- The root is multiplicative on positive factors. Once uniqueness is
 -- available the work is pure rearrangement: four factors, two applications
--- of the square identity, and associativity and commutativity in between.
+-- of the square identity, and associativity and commutativity in between
 -- Note that positivity of the product is an explicit argument rather than
 -- a pos*pos call inside the statement: sqrtℝ consumes a proof of 0ℝ <ℝ y,
 -- and a statement that fixes that proof term would force every caller to
@@ -484,7 +469,7 @@ sqrt-unique y 0y s 0≤s ss≈y =
 -- proof the caller owns.
 --
 -- 根在正因子之间可乘。有了唯一性以后剩下的只是重排：四个因子、两次
--- 平方式，中间用结合律与交换律。
+-- 平方式，中间用结合律与交换律
 -- 注意乘积为正作为显式参数，而不是在陈述内直接 pos*pos：sqrtℝ 要吃一个
 -- 0ℝ <ℝ y 的证明，若陈述把该证明项写死，调用方就必须写出同一个项（实数
 -- 序证明并不自动满足无关性）。做成显式参数后，调用方持有哪个证明都能用。
@@ -534,14 +519,14 @@ sqrt-of-mul y z 0y 0z 0yz =
 -- Roots commute with reciprocals on positive inputs. Again only
 -- uniqueness is needed: the reciprocal of the root squares to the
 -- reciprocal of the base, because reciprocal is multiplicative
--- (recipℝ-mul) and the square identity rewrites the base.
+-- (recipℝ-mul) and the square identity rewrites the base
 -- As with sqrt-of-mul the three positivity proofs are explicit arguments
 -- rather than terms spelled out in the statement, for the same reason:
 -- sqrtℝ and recipℝ consume proofs, and fixing them by term would restrict
 -- callers to that exact proof.
 --
 -- 根在正输入上与倒数可交换。仍然只需要唯一性：根的倒数平方后是底数的
--- 倒数，因为倒数是乘性的（recipℝ-mul），而平方式再把底数换回来。
+-- 倒数，因为倒数是乘性的（recipℝ-mul），而平方式再把底数换回来
 -- 与 sqrt-of-mul 一样，三个正性证明作为显式参数，理由相同：sqrtℝ 与
 -- recipℝ 都要吃证明，把证明项写死会限制调用方。
 sqrt-of-inv : (y : RealI) (0y : 0ℝ <ℝ y)

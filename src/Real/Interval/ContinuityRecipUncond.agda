@@ -27,7 +27,7 @@ open import Real.Interval.Continuity using (Close; Close-self; close-mono)
 open import Real.Interval.ContinuityClose using (close-endpoint-bounds)
 open import Real.Interval.ContinuityMul using (addle-cancel-<)
 open import Real.Interval.ContinuityRecipBasic using (l-near-lower; pos-meet)
-open import Real.Interval.ContinuityRecipQuota using (half-mul-<)
+open import Real.Interval.OrderLaws using (halved-tolerance-below)
 open import Real.Interval.OrderLe using (sub-mono)
 open import Real.Interval.ContinuityRecipBudget using (0<mul)
 open import Real.Interval.ContinuityRecipDeep using (δ-add)
@@ -68,8 +68,8 @@ pick-mod d₀ m 0d 0m =
       0half = nonNegative (<⇒≤ 0<half)
   in z * half
    , 0<mul z half 0z 0<half
-   , ≤-<-trans (*-monoʳ-≤-nonNeg half {{0half}} z≤d₀) (half-mul-< d₀ 0d)
-   , ≤-<-trans (*-monoʳ-≤-nonNeg half {{0half}} z≤m) (half-mul-< m 0m)
+   , ≤-<-trans (*-monoʳ-≤-nonNeg half {{0half}} z≤d₀) (halved-tolerance-below d₀ 0d)
+   , ≤-<-trans (*-monoʳ-≤-nonNeg half {{0half}} z≤m) (halved-tolerance-below m 0m)
 
 ------------------------------------------------------------------------
 -- Positivity of a neighbour inside a small enough neighbourhood
@@ -78,7 +78,7 @@ pick-mod d₀ m 0d 0m =
 
 -- At the level where the endpoint gaps hold and x already has passed
 -- n₀, the lower endpoint of x' stays within r of the lower endpoint of
--- x, hence above c - r, while delta at that level is at most delta n₀.
+-- x, hence above c - r, while delta at that level is at most delta n₀
 -- A radius below c - delta n₀ closes the chain.
 --
 -- 在端点差成立且 x 已越过 n₀ 的层级上，x' 的下端点与 x 的下端点相距

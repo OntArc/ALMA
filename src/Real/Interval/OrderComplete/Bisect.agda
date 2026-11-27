@@ -32,9 +32,9 @@ open import Real.Interval.OrderLaws using (width-below-strict)
 open import Real.Interval.Node using (u-dyadic; l-dyadic)
 open import Real.Interval.Kit using (0<half; 0≤half; half+half≡1)
 open import Real.Interval.Order renaming (<-trans to <-transR)
-open import Real.Interval.Rational using (pos-diff)
+open import Real.Interval.Rational using (pos-diff; plus-diff)
 open import Real.Interval.OrderComplete.Base using
-  (_≤ℝ_; a+d≡b; x<x+; emb<; δ-dec; Subset; Upper; Occupied; Located; Bracket
+  (_≤ℝ_; x<x+; emb<; δ-dec; Subset; Upper; Occupied; Located; Bracket
   ; mkB; quarter; 0<quarter; qq≡h; 3/4; cube≤half; recipPow2-step)
 open import Real.Interval.Reasoning using (begin≤_; _≈⟨_⟩_; _≤⟨_⟩_; _≤∎)
 
@@ -108,7 +108,7 @@ bracket-b-eq : ∀ (a b : ℚ) →
 bracket-b-eq a b =
   begin
     b
-      ≡⟨ sym (a+d≡b a b) ⟩
+      ≡⟨ sym (plus-diff a b) ⟩
     a + (b - a)
       ≡⟨ cong (a +_) (sym (d-half-pair (b - a))) ⟩
     a + ((b - a) * half + (b - a) * half)
@@ -126,7 +126,7 @@ bracket-bm-eq : ∀ (a b : ℚ) →
 bracket-bm-eq a b =
   begin
     b - (a + (b - a) * half)
-      ≡⟨ cong (λ z → z - (a + (b - a) * half)) (sym (a+d≡b a b)) ⟩
+      ≡⟨ cong (λ z → z - (a + (b - a) * half)) (sym (plus-diff a b)) ⟩
     (a + (b - a)) - (a + (b - a) * half)
       ≡⟨ cong₂ _-_ (+-comm a (b - a)) (+-comm a ((b - a) * half)) ⟩
     ((b - a) + a) - ((b - a) * half + a)
@@ -146,7 +146,7 @@ bracket-ra-eq a b =
     (a + ((b - a) * half + (b - a) * quarter)) - a
       ≡⟨ +-assoc a (((b - a) * half) + ((b - a) * quarter)) (- a) ⟩
     a + (((b - a) * half + (b - a) * quarter) - a)
-      ≡⟨ a+d≡b a ((b - a) * half + (b - a) * quarter) ⟩
+      ≡⟨ plus-diff a ((b - a) * half + (b - a) * quarter) ⟩
     (b - a) * half + (b - a) * quarter
       ∎
 
@@ -392,7 +392,7 @@ module _ {P : Subset} where
         a + 1ℚ
           ≡⟨ +-comm a 1ℚ ⟩
         1ℚ + a
-          ≡⟨ a+d≡b 1ℚ lx ⟩
+          ≡⟨ plus-diff 1ℚ lx ⟩
         lx
           ∎
 
@@ -434,7 +434,7 @@ module _ {P : Subset} where
           lxn≤uun  = ≮⇒≥ ¬uun<lxn
           uun≤uu   = u-mono u₀ {0} {n} z≤n
 
-          ux≡ = sym (a+d≡b lxn (u x n))
+          ux≡ = sym (plus-diff lxn (u x n))
 
           half+δn≤1 = subst (λ z → half + δ n ≤ z) half+half≡1
                         (+-monoʳ-≤ half δn≤half)
@@ -498,7 +498,7 @@ module _ {P : Subset} where
           two
             ∎
 
-        a'<a = subst (λ z → a' < z) (a+d≡b a' a)
+        a'<a = subst (λ z → a' < z) (plus-diff a' a)
                  (subst (λ z → a' < a' + z) (sym diff≡) (x<x+ a' 0<two))
         b<b' = x<x+ b 0<two
         a'<b' = <-trans a'<a (≤-<-trans (<⇒≤ a<b) b<b')

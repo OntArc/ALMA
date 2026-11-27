@@ -39,17 +39,16 @@ open import Real.Interval.Node using (u-dyadic; l-dyadic)
 open import Real.Interval.Kit using
   (recip-antitone; 0<half; 0≤half; half+half≡1; n≤2n; recipPow2-mul)
 open import Real.Interval.Order using (_<ℝ_; <-cotrans)
-open import Real.Interval.Rational using (pos-diff)
+open import Real.Interval.Rational using (pos-diff; plus-diff)
 
 ------------------------------------------------------------------------
 -- Non-strict order
 --
+-- 非严格序
+
 -- x ≤ℝ y when y is not strictly below x.
 --
--- 非严格序
---
 -- 当 y 不严格低于 x 时，称 x 非严格小于 y。
-
 infix 4 _≤ℝ_
 
 _≤ℝ_ : RealI → RealI → Set
@@ -71,26 +70,10 @@ x ≤ℝ y = ¬ (y <ℝ x)
 --
 -- 有理序与算术引理
 
-a+d≡b : (a b : ℚ) → a + (b - a) ≡ b
-a+d≡b a b =
-  begin
-    a + (b - a)
-      ≡⟨ cong (a +_) (+-comm b (- a)) ⟩
-    a + ((- a) + b)
-      ≡⟨ sym (+-assoc a (- a) b) ⟩
-    (a + (- a)) + b
-      ≡⟨ cong (_+ b) (+-invʳ a) ⟩
-    0ℚ + b
-      ≡⟨ +-identityˡ b ⟩
-    b
-      ∎
-
 -- Gap lemma
---
 -- a' ≤ a, b ≤ b' and δ < (b − a)/2 imply a' + δ < b'.
 --
 -- 间隙引理
---
 -- 在左界不下移、右界不上移的前提下，增量小于间隙一半时，加上增量仍小于右界。
 gapLemma : ∀ {a' b' a b : ℚ} (δ : ℚ) →
   0ℚ < b - a →
@@ -113,7 +96,7 @@ gapLemma {a'} {b'} {a} {b} δ g>0 a'≤a b≤b' δ<halfG = final
   δ<diff : δ < b' - a'
   δ<diff = <-≤-trans δ<g diff≥g
   final : a' + δ < b'
-  final = subst (λ z → a' + δ < z) (a+d≡b a' b')
+  final = subst (λ z → a' + δ < z) (plus-diff a' b')
             (+-monoʳ-< a' δ<diff)
 
 -- Adding a positive rational strictly increases the value.
@@ -126,12 +109,11 @@ x<x+ x {y} 0<y =
 ------------------------------------------------------------------------
 -- Reflection of rational order into the real order
 --
+-- 有理序反射到实数序
+
 -- p < q implies embedℚ p <ℝ embedℚ q.
 --
--- 有理序反射到实数序
---
 -- 有理数的严格序被嵌入保持。
-
 emb< : {p q : ℚ} → p < q → embedℚ p <ℝ embedℚ q
 emb< {p} {q} p<q =
   let d = q - p
@@ -193,12 +175,11 @@ emb< {p} {q} p<q =
 ------------------------------------------------------------------------
 -- Dyadic radius decay
 --
+-- 二进半径的递减
+
 -- δ is antitone in n: m ≤ n → δ n ≤ δ m.
 --
--- 二进半径的递减
---
 -- 二进半径对层级索引反单调不增。
-
 δ-dec : ∀ m n → m ≤N n → δ n ≤ δ m
 δ-dec m n p =
   recip-antitone 0<den
@@ -238,13 +219,12 @@ Occupied P a = Σ RealI λ x → P x × (embedℚ a <ℝ x)
 ------------------------------------------------------------------------
 -- Locatedness
 --
+-- 定位性
+
 -- For rationals p < q, either some member exceeds p or every member is
 -- below q.
 --
--- 定位性
---
 -- 对有理数 p < q，要么某个成员超过 p，要么每个成员都低于 q。
-
 Located : Subset → Set
 Located P = ∀ (p q : ℚ) → p < q → Occupied P p ⊎ Upper P q
 
@@ -384,9 +364,9 @@ cube≤half =
 ------------------------------------------------------------------------
 -- Dyadic half-powers
 --
--- The dyadic scale satisfies recipPow2 (suc j) = recipPow2 j * half.
---
 -- 二进半幂
+
+-- The dyadic scale satisfies recipPow2 (suc j) = recipPow2 j * half.
 --
 -- 二进刻度在取后继时等价于乘以二分之一。
 recipPow2-step : ∀ j → recipPow2 j * half ≡ recipPow2 (suc j)

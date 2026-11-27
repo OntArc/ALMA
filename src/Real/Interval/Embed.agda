@@ -21,7 +21,7 @@ open ≡-Reasoning
 
 open import Real using (half; 2ℚ)
 open import Real.Interval using (dyadic; δ; δ-half)
-open import Real.Interval.Arith using (0ℝ; 1ℝ; _+ℝ_; negℝ)
+open import Real.Interval.Arith using (0ℝ; 1ℝ; _+ℝ_; _-ℝ_; negℝ)
 open import Real.Interval.Mul using (_*ℝ_)
 open import Real.Interval.Order using (_<ℝ_)
 open import Real.Interval.OrderLaws using (half<1)
@@ -37,12 +37,11 @@ open import Real.Interval.Mul.Core using (term1)
 -- Nontriviality: 0ℝ <ℝ 1ℝ
 --
 -- 非平凡性
---
+
 -- At depth 1, the upper endpoint of 0ℝ lies strictly below the lower
 -- endpoint of 1ℝ.
 --
 -- 在深度 1 处，0ℝ 的上端点严格低于 1ℝ 的下端点。
-
 δ0≡half : δ 0 ≡ half
 δ0≡half = refl
 
@@ -191,6 +190,28 @@ embedℚ-neg q =
       neg (centre (dyadic q 0) n)
         ≡⟨ sym (centre-neg (dyadic q 0) n) ⟩
       centre (negℝ (dyadic q 0)) n
+        ∎
+
+-- embedℚ preserves subtraction: both sides agree in centre at every
+-- depth. Subtraction is `x + negℝ y`, so the centre computation is
+-- additivity of `centre` followed by its commutativity with negation.
+--
+-- embedℚ 保减法：两侧在每个深度的中心相同。减法是 `x + negℝ y`，
+-- 故中心的计算为 centre 的可加性，随后是 centre 与取负的交换。
+embedℚ-sub : (p q : ℚ) →
+  dyadic (p - q) 0 ≈ℝ dyadic p 0 -ℝ dyadic q 0
+embedℚ-sub p q =
+  ≈ℝ-of-eq (dyadic (p - q) 0) (dyadic p 0 -ℝ dyadic q 0)
+    λ n → begin
+      centre (dyadic (p - q) 0) n
+        ≡⟨ centre-embedℚ (p - q) n ⟩
+      p - q
+        ≡⟨ sym (cong₂ _-_ (centre-embedℚ p n) (centre-embedℚ q n)) ⟩
+      centre (dyadic p 0) n - centre (dyadic q 0) n
+        ≡⟨ sym (trans (centre-add (dyadic p 0) (negℝ (dyadic q 0)) n)
+                 (cong (centre (dyadic p 0) n +_)
+                   (centre-neg (dyadic q 0) n))) ⟩
+      centre (dyadic p 0 -ℝ dyadic q 0) n
         ∎
 
 -- embedℚ preserves multiplication. The product centre error is

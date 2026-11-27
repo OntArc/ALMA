@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
--- Assembly layer: samples, gaps, levels and close-recip
+-- Assembly layer of the reciprocal chain
 --
--- 装配层：采样、间隙、层级与 close-recip
+-- 倒数链的装配层
 ------------------------------------------------------------------------
 
 {-# OPTIONS --safe --cubical-compatible --guardedness --exact-split --double-check #-}
@@ -39,9 +39,9 @@ open import Real.Interval.ContinuityMul using
 open import Real.Interval.ContinuityClose using (close-endpoint-bounds)
 open import Real.Interval.ContinuityProdGap using (within)
 open import Real.Interval.ContinuityRecipBasic using
-  (Bsq-index; recip-modulus-grow; gap-c; sub-neg-trans; sub-add-right; add-left
+  (Bsq-index; recip-modulus-grow; gap-c; sub-neg-trans; add-left; width-near
   ; centre-gap-upper; centre-gap-lower; centre-cross-upper; centre-cross-lower
-  ; width-near; u-shift-upper)
+  ; u-shift-upper)
 open import Real.Interval.ContinuityProdBudget using (width-pos)
 open import Real.Interval.Kit using (half≤1)
 open import Real.Interval.Mul using (sub-monoˡ)
@@ -50,6 +50,7 @@ open import Real.Interval.OrderLe using (sub-mono)
 open import Real.Interval.OrderLaws using (width-dec)
 open import Real.Interval.Recip using
   (recipCauchy; realI→posCauchy; recip-modulus; recipℝ; PosCauchy; recipcauchy-μ)
+open import Real.Interval.Rational using (+rearrange; add-then-drop)
 
 ------------------------------------------------------------------------
 -- Assembly of the reciprocal's continuity: first wiring
@@ -159,7 +160,7 @@ neg-nonneg q 0≤q = subst (λ z → - q ≤ z) (sym neg-0) (neg-antimono-≤ 0�
 -- 邻域另一侧
 
 -- Here l-add-emb is used in the reverse direction: the right half of
--- Close puts u x' below l (x + emb d), whose value is l x - δ + d.
+-- Close puts u x' below l (x + emb d), whose value is l x - δ + d
 -- Since -δ ≤ 0, that is at most l x + d, and l x ≤ u x closes the step.
 --
 -- 此处 l-add-emb 反向使用：Close 的右半把 u x' 压到 l (x + emb d) 之
@@ -269,7 +270,7 @@ pos-of-sample pc t =
 --
 -- 库中把倒数写成 1/ A，其实例参数带点号，无法显式传入。经 inv 转一
 -- 道，非零参数变成普通实例参数，可显式交出一个证明，而项仍是库的
--- 1/ A。
+-- 仍写作 1/ A。
 inv : (A : ℚ) {{_ : NonZero A}} → ℚ
 inv A = 1/ A
 
@@ -302,7 +303,7 @@ sample-of : (pc : PosCauchy) (t : ℕ) → ℚ
 sample-of pc t = CauchySeq.f (PosCauchy.seq pc) (PosCauchy.N₀ pc +ℕ t)
 
 -- gap-c asks for the two values, a common positive lower bound c, the
--- positivity of both, and a bound W on the difference read as B + -A.
+-- positivity of both, and a bound W on the difference read as B + -A
 -- Here the values are the samples of the two reciprocals, written
 -- through inv so the NonZero proofs can be handed over; A * B is then
 -- charged against c * c, and the whole estimate is monotone in W.
@@ -514,13 +515,6 @@ close-recip x 0<x x' 0<x' n e h₁ h₂ =
 --
 -- 标量预算：差值界低于 e - 3δ 即给出和式形状
 
--- Swap the last two summands of a triple sum.
---
--- 交换三项之和的后两个加项。
-swap : (p q r : ℚ) → (p + q) + r ≡ (p + r) + q
-swap p q r = trans (+-assoc p q r)
-                   (trans (cong (p +_) (+ℚ-comm q r)) (sym (+-assoc p r q)))
-
 -- The forward direction of the sum-shaped gap.
 --
 -- 和式间隙的正方向。
@@ -544,7 +538,7 @@ gap-sum-left a b s e E le gap =
       h8 : a + (s + s) < (b + e) - s
       h8 = lt-shift (a + (s + s)) (b + e) s h7
   in subst (λ z → z < (b - s) + e) (sym (+-assoc a s s))
-           (subst (λ z → a + (s + s) < z) (sym (swap b (- s) e)) h8)
+           (subst (λ z → a + (s + s) < z) (sym (+rearrange b (- s) e)) h8)
 
 -- The backward direction of the sum-shaped gap.
 --
@@ -573,9 +567,9 @@ gap-sum-right a b s e E le gap =
       h10 : b + s < ((a + e) - s) - s
       h10 = lt-shift (b + s) ((a + e) - s) s h9
       eqA : ((a + (- s)) + (- s)) + e ≡ ((a + (- s)) + e) + (- s)
-      eqA = swap (a + (- s)) (- s) e
+      eqA = +rearrange (a + (- s)) (- s) e
       eqB : ((a + (- s)) + e) + (- s) ≡ ((a + e) + (- s)) + (- s)
-      eqB = cong (λ z → z + (- s)) (swap a (- s) e)
+      eqB = cong (λ z → z + (- s)) (+rearrange a (- s) e)
       eq : ((a + e) - s) - s ≡ ((a - s) - s) + e
       eq = sym (trans eqA eqB)
   in subst (λ z → b + s < z) eq h10
@@ -786,11 +780,6 @@ sample-sides d W x 0<x x' 0<x' m n hm hwj hwj' hwq 0≤W 0≤d mn =
 --
 -- 减法恒等式与采样中心的有界位移
 
-sub-cancel-right : (a c : ℚ) → (a + c) - a ≡ c
-sub-cancel-right a c =
-  trans (sub-add-right a a c)
-        (trans (cong (λ z → z + c) (+-inverseʳ a)) (+-identityˡ c))
-
 neg-sub-eq : (a b : ℚ) → - (a - b) ≡ b - a
 neg-sub-eq a b =
   trans (neg-distrib-+ a (- b))
@@ -865,11 +854,11 @@ sample-gap-W d W x 0<x x' 0<x' m n hm hwj hwj' hwq 0≤W 0≤d mn =
       lo = proj₂ sides
 
       hAB : A + (- B) ≤ U
-      hAB = subst (λ z → A + (- B) ≤ z) (sub-cancel-right B U)
+      hAB = subst (λ z → A + (- B) ≤ z) (add-then-drop B U)
                   (sub-mono {a = A} {a' = B + U} {b = B} {b' = B} up ≤-refl)
 
       hBA : B + (- A) ≤ Lb
-      hBA = subst (λ z → B + (- A) ≤ z) (sub-cancel-right A Lb)
+      hBA = subst (λ z → B + (- A) ≤ z) (add-then-drop A Lb)
                   (sub-monoˡ {a = B} {b = A + Lb} {c = A} lo)
 
       hneg : - U ≤ B + (- A)
@@ -941,7 +930,7 @@ abs-two-sides a b E h =
 
 -- The radius is the sum of the two deep widths. Both terms are
 -- positive, so each summand dominates itself, and the common level
--- j + j' is deeper than j, hence its width is smaller by width-dec.
+-- j + j' is deeper than j, hence its width is smaller by width-dec
 -- Since both sample levels grow with n, this radius tends to zero as
 -- n grows: it is the only usable radius for the budget.
 --

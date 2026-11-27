@@ -121,7 +121,7 @@ module _ {P : Subset} (loc : Located P)
   ----------------------------------------------------------------------
   -- width (embedℚ 0) n ≡ δ n + δ n
   --
-  -- embedℚ 0 在层级 n 的宽度。
+  -- embedℚ 0 在层级 n 的宽度
 
   w0-embed0 : ∀ n → width (embedℚ 0ℚ) n ≡ δ n + δ n
   w0-embed0 n =
@@ -136,9 +136,9 @@ module _ {P : Subset} (loc : Located P)
         ∎
 
   ----------------------------------------------------------------------
-  -- smallNode: a level where both width sup and δ are below g/2.
+  -- smallNode: level with sup width and δ below g/2
   --
-  -- smallNode：使上确界宽度与二进容差均低于目标一半的层级。
+  -- smallNode：使上确界宽度与二进容差均低于目标一半的层级
 
   smallNode : (k : ℕ) (g : ℚ) → 0ℚ < g →
     Σ ℕ λ n → n ≥N k × width sup n < g * half × δ n < g * half
@@ -164,11 +164,9 @@ module _ {P : Subset} (loc : Located P)
     in n , n≥k , w< , d<
 
   ----------------------------------------------------------------------
-  -- sup-upper-witness: given a gap at level k, produce a strict-order
-  -- witness between the dyadic upper bound and the target.
+  -- sup-upper-witness: strict witness above the dyadic upper bound
   --
-  -- sup-upper-witness：由第 k 层的间隙，构造上界嵌入与目标之间的
-  -- 严格序见证。
+  -- sup-upper-witness：二进上界之上的严格序见证
 
   sup-upper-witness : (z : RealI) (k : ℕ) (g : ℚ)
       → g ≡ l z k - u sup k
@@ -190,12 +188,9 @@ module _ {P : Subset} (loc : Located P)
     in n , n≥k , eb<z
 
   ----------------------------------------------------------------------
-  -- sup-least-witness: given a gap at level k, produce a strict-order
-  -- witness between the candidate lower bound and the dyadic lower
-  -- bound of sup.
+  -- sup-least-witness: strict witness below the dyadic lower bound of sup
   --
-  -- sup-least-witness：由第 k 层的间隙，构造候选下界与上确界下界
-  -- 嵌入之间的严格序见证。
+  -- sup-least-witness：上确界二进下界之下的严格序见证
 
   sup-least-witness : (y : RealI) (k : ℕ) (g : ℚ)
       → g ≡ l sup k - u y k
@@ -233,9 +228,9 @@ module _ {P : Subset} (loc : Located P)
     in n , n≥k , y<ea
 
   ----------------------------------------------------------------------
-  -- sup is an upper bound: every member stays below sup.
+  -- Upper bound property of sup
   --
-  -- sup 是上界：每个成员都不超过它。
+  -- sup 的上界性
 
   sup-upper : ∀ z → P z → z ≤ℝ sup
   sup-upper z pz sup<z =
@@ -252,9 +247,9 @@ module _ {P : Subset} (loc : Located P)
     in <-irrefl (embedℚ (u sup n)) absurd
 
   ----------------------------------------------------------------------
-  -- sup is least: any upper bound is at least sup.
+  -- Least property of sup
   --
-  -- sup 是最小上界：任意上界都不小于它。
+  -- sup 的最小性
 
   sup-least : ∀ y → ((z : RealI) → P z → z ≤ℝ y) → sup ≤ℝ y
   sup-least y bound y<sup =
@@ -273,6 +268,38 @@ module _ {P : Subset} (loc : Located P)
         y<x = <-transR y<ea an<x
         x≤y = bound x px
     in x≤y y<x
+
+  ----------------------------------------------------------------------
+  -- A point below the supremum has a member above it
+  --
+  -- 上确界之下的点必有成员压在其上
+
+  -- This is the member half of the witness built in `sup-least`: a point
+  -- strictly below the supremum yields a level `n` whose upper end lies
+  -- above it, and the occupied interval of that level supplies a member
+  -- which the lower end of the level cannot reach. Keeping only that half
+  -- gives the fact needed to open a cut from below.
+  --
+  -- 这是 `sup-least` 里所造见证的"成员"那一半：严格低于上确界的点给出某层
+  -- n，其上端在该点之上，而该层被占据的区间提供成员，该层下端够不到它。
+  -- 只保留这一半，就得到从下方打开一个割所需的事实。
+  sup-member-of-lt : (y : RealI) → y <ℝ sup
+                   → Σ RealI (λ x → P x × (y <ℝ x))
+  sup-member-of-lt y y<sup =
+    let k = proj₁ y<sup
+        gap0 = proj₂ y<sup
+        g = l sup k - u y k
+        0<g = pos-diff (u y k) (l sup k) gap0
+        sn = sup-least-witness y k g refl 0<g
+        n = proj₁ sn
+        y<ea = proj₂ (proj₂ sn)
+        occn = Bracket.occ (br-seq n)
+        x = proj₁ occn
+        px = proj₁ (proj₂ occn)
+        a0<x = proj₂ (proj₂ occn)
+        an<x = subst (λ q → embedℚ q <ℝ x) (sym (l-sup n)) a0<x
+    in
+      x , (px , <-transR y<ea an<x)
 
   ----------------------------------------------------------------------
   -- Order completeness

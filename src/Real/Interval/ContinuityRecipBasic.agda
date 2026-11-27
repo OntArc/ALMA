@@ -8,8 +8,6 @@
 
 module Real.Interval.ContinuityRecipBasic where
 
-open import Real.Interval.OrderComplete using (half-pos)
-
 open import Data.Empty using (⊥-elim)
 open import Data.Nat using (ℕ; suc) renaming (_*_ to _*ℕ_; _≤_ to _≤ℕ_)
 open import Data.Nat.Properties as ℕP using (n≤1+n)
@@ -21,11 +19,10 @@ open import Data.Rational using
 open import Data.Rational.Base using (1/_; nonNegative)
 open import Data.Rational.Properties using
   (neg-antimono-≤; pos⇒nonZero; positive⁻¹; 1/pos⇒pos; pos*pos⇒pos; <⇒≤
-  ; ≤-trans; ≤-refl; ≤-reflexive; *-comm; *-identityˡ; *-identityʳ
-  ; *-distribʳ-+; +-assoc; +-comm; +-inverseʳ; +-identityʳ; +-mono-≤
-  ; *-monoˡ-≤-nonNeg; *-monoʳ-≤-nonNeg; ⊓-sel; p⊓q≤p; p⊓q≤q; ≤-<-trans
-  ; <-trans; <-irrefl; *-cancelˡ-<-nonNeg; ∣p*q∣≡∣p∣*∣q∣; 0≤p⇒∣p∣≡p
-  ; 0≤∣p∣)
+  ; ≤-trans; ≤-refl; ≤-reflexive; *-comm; *-identityˡ; *-identityʳ; *-distribʳ-+
+  ; +-assoc; +-comm; +-inverseʳ; +-identityʳ; +-mono-≤; +-monoʳ-≤; *-monoˡ-≤-nonNeg
+  ; *-monoʳ-≤-nonNeg; ⊓-sel; p⊓q≤p; p⊓q≤q; ≤-<-trans; <-trans; <-irrefl
+  ; *-cancelˡ-<-nonNeg; ∣p*q∣≡∣p∣*∣q∣; 0≤p⇒∣p∣≡p; 0≤∣p∣)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
 open import Relation.Binary.PropositionalEquality using
@@ -36,10 +33,11 @@ open import Base.RationalRing using (0<1)
 open import Real using
   (ε; 0<ε; CauchySeq; half; embed; 0≤embed; embed-mono-≤; embed-*-hom)
 open CauchySeq renaming (f to seq-f; μ to seq-μ)
+open import Real.Archimedean using (ε-≤-1)
 open import Real.CauchyToInterval using (M; K; K≥k; μ≤M; node-go; cauchy→realI)
 open import Real.IntervalEquiv using
-  (l; u; width; 1≤embed-suc; centre; centre-l; centre-u; centre-diff; bound-w
-  ; realI→cauchy; μx-dom)
+  (l; u; width; centre; centre-l; centre-u; centre-diff; bound-w; realI→cauchy
+  ; μx-dom)
 open import Real.Interval using (RealI; δ; δ-pos; double-half)
 open import Real.Interval.Arith using (0ℝ)
 open import Real.Interval.Continuity using (Close; sub-add-cancel)
@@ -52,6 +50,7 @@ open import Real.Interval.Mul using (sub-monoˡ)
 open import Real.Interval.Mul.Order using (u-dyadic-0)
 open import Real.Interval.Order using (_<ℝ_)
 open import Real.Interval.OrderLe using (sub-mono)
+open import Real.Interval.OrderComplete using (half-pos)
 open import Real.Interval.Recip using
   (inv-sub; recip-modulus; recip-modulus-lower ; realI→posCauchy; recipCauchy)
 open import Real.Interval.Reasoning using (begin≤_; _≈⟨_⟩_; _≤⟨_⟩_; _≤∎)
@@ -163,12 +162,6 @@ l-near-lower d x x' m hl t mt =
 --
 -- 单侧同加一个固定有理数
 
--- Adding the same rational on the right preserves order.
---
--- 右侧同加一个有理数保持序。
-add-mono-≤ : (a c d : ℚ) → c ≤ d → a + c ≤ a + d
-add-mono-≤ a c d h = +-mono-≤ {x = a} {y = a} {u = c} {v = d} ≤-refl h
-
 -- Adding the same rational on the left preserves order.
 --
 -- 左侧同加一个有理数保持序。
@@ -184,7 +177,7 @@ add-left a b c h = +-mono-≤ {x = a} {y = b} {u = c} {v = c} h ≤-refl
 --
 -- 右侧减去更大的项会使结果更小。
 sub-le-right : (a c d : ℚ) → d ≤ c → a - c ≤ a - d
-sub-le-right a c d h = add-mono-≤ a (- c) (- d) (neg-antimono-≤ h)
+sub-le-right a c d h = +-monoʳ-≤ a (neg-antimono-≤ h)
 
 -- Regrouping an addition on the left of a subtraction.
 --
@@ -267,7 +260,7 @@ centre-cross-upper d Wx Wx' x x' nu nu' q nu≤q nu'≤q hx hxq hxu hu =
               (proj₂ (within (centre x nu - centre x q) (width x nu)
                         (centre-diff x nu nu q ℕP.≤-refl nu≤q)))
       hA2 : centre x q + width x nu ≤ centre x q + Wx
-      hA2 = add-mono-≤ (centre x q) (width x nu) Wx hx
+      hA2 = +-monoʳ-≤ (centre x q) hx
       hA : centre x nu ≤ centre x q + Wx
       hA = ≤-trans hA1 hA2
       hB : centre x q ≤ centre x' q + (Wx' + d)
@@ -277,7 +270,7 @@ centre-cross-upper d Wx Wx' x x' nu nu' q nu≤q nu'≤q hx hxq hxu hu =
               (proj₂ (within (centre x' q - centre x' nu') (width x' nu')
                         (centre-diff x' nu' q nu' nu'≤q ℕP.≤-refl)))
       hC2 : centre x' nu' + width x' nu' ≤ centre x' nu' + Wx'
-      hC2 = add-mono-≤ (centre x' nu') (width x' nu') Wx' hxu
+      hC2 = +-monoʳ-≤ (centre x' nu') hxu
       hC : centre x' q ≤ centre x' nu' + Wx'
       hC = ≤-trans hC1 hC2
       hC' : centre x' q + (Wx' + d) ≤ (centre x' nu' + Wx') + (Wx' + d)
@@ -310,7 +303,7 @@ centre-cross-lower d Wx Wx' x x' nu nu' q nu≤q nu'≤q hxq hx hxu hu =
               (proj₂ (within (centre x' nu' - centre x' q) (width x' nu')
                         (centre-diff x' nu' nu' q ℕP.≤-refl nu'≤q)))
       hA2 : centre x' q + width x' nu' ≤ centre x' q + Wx'
-      hA2 = add-mono-≤ (centre x' q) (width x' nu') Wx' hxu
+      hA2 = +-monoʳ-≤ (centre x' q) hxu
       hA : centre x' nu' ≤ centre x' q + Wx'
       hA = ≤-trans hA1 hA2
       hB : centre x' q ≤ centre x q + (Wx + d)
@@ -320,7 +313,7 @@ centre-cross-lower d Wx Wx' x x' nu nu' q nu≤q nu'≤q hxq hx hxu hu =
               (proj₂ (within (centre x q - centre x nu) (width x nu)
                         (centre-diff x nu q nu nu≤q ℕP.≤-refl)))
       hC2 : centre x nu + width x nu ≤ centre x nu + Wx
-      hC2 = add-mono-≤ (centre x nu) (width x nu) Wx hx
+      hC2 = +-monoʳ-≤ (centre x nu) hx
       hC : centre x q ≤ centre x nu + Wx
       hC = ≤-trans hC1 hC2
       hC' : centre x q + (Wx + d) ≤ (centre x nu + Wx) + (Wx + d)
@@ -349,8 +342,6 @@ centre-cross-lower d Wx Wx' x x' nu nu' q nu≤q nu'≤q hxq hx hxu hu =
 pos-embed2 : Positive (embed 2)
 pos-embed2 = positive 0<embed2
 
--- The half is positive.
---
 
 ------------------------------------------------------------------------
 -- The retained lower bound: the smaller of b / 2 and 1
@@ -444,25 +435,6 @@ c≤b-c b =
   in ≤-trans (≤-reflexive (sym step2)) step1
 
 ------------------------------------------------------------------------
--- The k-th precision is at most one
---
--- 第 k 层精度不超过一
-
--- One divided by one is one.
---
--- 一除以一等于一。
-1/1≡1 : 1/ 1ℚ ≡ 1ℚ
-1/1≡1 = refl
-
--- The k-th precision is at most one.
---
--- 第 k 层精度不超过一。
-ε≤1 : (k : ℕ) → ε k ≤ 1ℚ
-ε≤1 k =
-  subst (λ z → ε k ≤ z) (sym 1/1≡1)
-        (recip-antitone {a = 1ℚ} {b = embed (suc k)} 0<1 (1≤embed-suc k))
-
-------------------------------------------------------------------------
 -- Slack: proportional to c squared, at most c
 --
 -- 松弛量：与 c 的平方成正比，且不超过 c
@@ -473,10 +445,10 @@ c≤b-c b =
 εk*ε9≤1 : (k : ℕ) → ε k * ε 9 ≤ 1ℚ
 εk*ε9≤1 k =
   let q : ε k * ε 9 ≤ 1ℚ * ε 9
-      q = *-monoʳ-≤-nonNeg (ε 9) {{nonNegative (<⇒≤ (0<ε 9))}} (ε≤1 k)
+      q = *-monoʳ-≤-nonNeg (ε 9) {{nonNegative (<⇒≤ (0<ε 9))}} (ε-≤-1 k)
       q' : ε k * ε 9 ≤ ε 9
       q' = subst (λ z → ε k * ε 9 ≤ z) (*-identityˡ (ε 9)) q
-  in ≤-trans q' (ε≤1 9)
+  in ≤-trans q' (ε-≤-1 9)
 
 -- The slack for the retained bound.
 --

@@ -11,7 +11,7 @@
 
 ALMA is a formal framework grounded in type theory and category theory, whose central construction is the E-M type (an indexed M-type over an edge family). Its core instance, Cosmos—an infinite, unbounded, dynamic, and self-referential universe—provides a mathematical model for philosophical ontology research. The project's vision is to test the explanatory power and consistency of this framework through derived formal modules such as constructive real numbers (Real/) and constructive physics (Physics/).
 
-ALMA 是一个基于类型论与范畴论的形式化框架，其中心构造是 E-M 型（边族上的索引 M 型）；核心实例 Cosmos 是一个无限、无界、动态且自我指涉的宇宙——为哲学本体论研究提供了数学模型。项目的愿景是通过构造性实数 Real/，构造性物理 Physics/ 等派生形式化模块检验该框架的解释力与一致性。
+ALMA 是一个基于类型论与范畴论的形式化框架，其中心构造是 E-M 型（边族上的索引 M 型）；核心实例 Cosmos 是一个无限、无界、动态且自我指涉的宇宙，为哲学本体论研究提供数学模型。项目的愿景是通过构造性实数 Real/，构造性物理 Physics/ 等派生形式化模块检验该框架的解释力与一致性。
 
 ## Motivation / 动机
 
@@ -23,7 +23,7 @@ The inherent ambiguity and non-computability of natural language render it an un
 
 The formalization has undergone three migrations across tools, each rooted in a fundamental conflict of ontological commitments. In the QS5+BF phase, the Barcan Formula forces all possible worlds to share a single domain of quantification. The subsequent turn to Lean 4 revealed, beyond mere expressiveness bottlenecks, that its mathematical library's deep entrenchment in the Law of Excluded Middle and classical set theory constitutes a direct conflict at the level of ontological commitment. Agda was ultimately selected: a purely constructive dependent type theory that presupposes no classical or extensional axioms whatsoever—including the Law of Excluded Middle, the Axiom of Choice, function extensionality, propositional extensionality, and univalence—and is among the mainstream proof assistants with the fewest ontological presuppositions; its dependent types and coinductive records align precisely with the ontological commitments of this work. This trajectory of migrations itself reveals that formalization languages are not neutral notational vehicles; their logical foundations, type structures, and axiomatic environments collectively constitute an implicit set of ontological commitments. To choose a tool is to choose an ontology.
 
-形式化历经三次工具迁移，其背后是本体论承诺的根本性冲突。QS5+BF 阶段，Barcan 公式强制所有可能世界共享同一论域。转向 Lean 4 后，除表达力瓶颈外，更发现与其数学库对排中律与经典集合论的深度嵌入，直接构成本体论承诺层面的冲突。最终选定 Agda：纯构造性依赖类型论，不预设排中律、选择公理、函数外延性、命题外延性、单值性等任何经典或外延性公理，是主流证明助手中本体论预设最少的系统之一；其依赖类型与余归纳记录恰与该项工作的本体论承诺完全相合。这一迁移历程本身揭示：形式化语言并非中性的记号载体；其逻辑基底、类型结构与公理环境，共同构成一套隐性的本体论承诺。工具选择，即本体论选择。
+形式化历经三次工具迁移，其背后是本体论承诺的根本性冲突。QS5+BF 阶段，Barcan 公式强制所有可能世界共享同一论域。转向 Lean 4 后，除表达力瓶颈外，更发现与其数学库对排中律与经典集合论的深度嵌入，直接构成本体论承诺层面的冲突。最终选定 Agda：纯构造性依赖类型论，不预设排中律、选择公理、函数外延性、命题外延性、单价性公理等任何经典或外延性公理，是主流证明助手中本体论预设最少的系统之一；其依赖类型与余归纳记录恰与该项工作的本体论承诺完全相合。这一迁移历程本身揭示：形式化语言并非中性的记号载体；其逻辑基底、类型结构与公理环境，共同构成一套隐性的本体论承诺。工具选择，即本体论选择。
 
 ## Key Contribution / 核心贡献
 
@@ -105,9 +105,17 @@ rational continuum. It originated from the needs of the physical instances in `P
 
 ## Contributing / 贡献指南
 
-Discussions, proof ideas, literature references and code contributions are all welcome. All contributions must follow the project's [CONTRIBUTING.md](CONTRIBUTING.md), include a DCO sign-off, and pass the project's CI and deduplication checks. The project follows the OpenSSF Best Practices Badge criteria (currently at the passing level; applicable silver-level criteria are tracked).
+Discussions, proof ideas, literature references and code contributions are all welcome.
 
-欢迎参与讨论、提供证明思路与文献指引，或贡献代码。所有贡献须遵循项目的 [CONTRIBUTING.md](CONTRIBUTING.md)，完成 DCO 签署，并通过项目的 CI 和查重检查。项目遵循 OpenSSF Best Practices 徽章条款（当前为 passing 级别，并跟踪适用的 silver 级别条款）。
+Trust is one of the important conditions for high-quality collaboration and long-term sustainability, but it alone is not sufficient to sustain long-term collaboration. Transparent rules, clear contribution contracts, review and oversight, aligned incentives, and feedback loops provide a more stable and actionable underpinning for this project.
+
+All contributions must follow the project's [CONTRIBUTING.md](CONTRIBUTING.md), include a DCO sign-off, and pass the project's CI and deduplication checks. The project follows the OpenSSF Best Practices Badge criteria (currently at the passing level; applicable silver-level criteria are tracked).
+
+欢迎参与讨论、提供证明思路与文献指引，或贡献代码。
+
+信任是高质量协作与长期可持续性的重要条件之一，但不足以单独支撑长期协作；透明的规则、明确的贡献契约、审查与监督、利益一致的激励机制和反馈闭环，是本项目更稳定、可执行的底层支撑。
+
+所有贡献须遵循项目的 [CONTRIBUTING.md](CONTRIBUTING.md)，完成 DCO 签署，并通过项目的 CI 和查重检查。项目遵循 OpenSSF Best Practices 徽章条款（当前为 passing 级别，并跟踪适用的 silver 级别条款）。
 
 ## Preprint / 预印本
 
@@ -213,4 +221,4 @@ AI工具使用：本研究在辅助性环节使用了生成式人工智能工具
 
 The author wishes to express sincere gratitude to Mr. Liang Wenfeng for his pivotal contributions to the open-source advancement of large language models, from which a broad public community—including the present study—has directly benefited.
 
-谨向梁文峰先生致以诚挚感谢。其在推动AI语言模型开源领域的关键性贡献，令包括本研究在内的广泛公众群体直接受益。
+谨向梁文锋先生致以诚挚感谢。其在推动大语言模型开源领域的关键性贡献，令包括本研究在内的广泛公众群体直接受益。

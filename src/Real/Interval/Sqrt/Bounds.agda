@@ -34,40 +34,15 @@ open import Real.IntervalEquiv using (node; l; u; l-mono; u-mono)
 open import Real.Interval using (RealI; embedℚ; δ; δ-pos)
 open import Real.Interval.Mul.Order using (δ-below; δ-mono)
 open import Real.Interval.Node using (l-dyadic; u-dyadic)
-open import Real.Interval.Rational using (pos-diff)
+open import Real.Interval.Rational using (pos-diff; plus-diff)
 open import Real.Interval.Order using (_<ℝ_)
-open import Real.Interval.OrderComplete.Base using (_≤ℝ_; a+d≡b)
+open import Real.Interval.OrderComplete.Base using (_≤ℝ_)
 
 ------------------------------------------------------------------------
 -- Rational endpoints
 --
 -- 有理端点
 
--- This module only touches rational arithmetic and the layer endpoints
--- of a real. It never mentions the supremum construction, so it can be
--- checked independently of OrderComplete.
--- Naming note: the four names sketched in the original plan sit at the
--- layer where their content actually lives, not here:
---   sqrt-of-bound  = sqrt-upper / sqrt-least   (Sqrt.Core)
---   lower-bracket  = l-layer-≤ together with l-sup   (here, OrderComplete)
---   upper-bracket  = u-layer-≤ together with u-sup   (here, OrderComplete)
---   bracket-width  = width-below-strict (OrderLaws) plus bracket-width
---                    for sqrt's own bracket (Sqrt.Core)
--- What stays here is the generic rational estimates the construction
--- consumes; giving them sqrt-specific names would misdescribe them.
--- q - δ n is strictly below q.
---
--- 本模块只涉及有理算术与实数的层端点，不涉及上确界构造，故可脱离
--- OrderComplete 独立编译。
--- 命名说明：原规划里的四个名字落在其内容实际所在的那一层，不在本模块：
---   sqrt-of-bound   = sqrt-upper / sqrt-least   （Sqrt.Core）
---   lower-bracket   = l-layer-≤ 与 l-sup        （本模块与 OrderComplete）
---   upper-bracket   = u-layer-≤ 与 u-sup        （本模块与 OrderComplete）
---   bracket-width   = width-below-strict        （OrderLaws）
---                   加 sqrt 自身括号的 bracket-width（Sqrt.Core）
--- 本模块保留的是构造所需的通用有理估计；把它们冠以 sqrt 之名会与所证
--- 内容不符。
--- q 减去二进容差后严格低于 q。
 negδ-add-lt : (q : ℚ) (n : ℕ) → (- δ n) + q < q
 negδ-add-lt q n =
   subst₂ _<_
@@ -184,19 +159,13 @@ decide-below y k p with <-cmp (p * p) (l y k)
 --
 -- 差与平方差的正当性
 
--- A strict inequality makes the right-hand difference positive.
---
--- 严格不等式给出右侧差的正当性。
-sub-pos : (a b : ℚ) → a < b → 0ℚ < b - a
-sub-pos a b a<b = pos-diff a b a<b
-
 -- A non-negative number whose square is below a positive square is
 -- itself below it.
 --
 -- 非负数若其平方低于一个正数的平方，则它低于该正数。
 sq-gap-pos : (u q : ℚ) → 0ℚ ≤ u → 0ℚ < q → u * u < q * q → 0ℚ < q - u
 sq-gap-pos u q 0≤u 0<q uu<qq with <-cmp u q
-... | tri< u<q _ _   = sub-pos u q u<q
+... | tri< u<q _ _   = pos-diff u q u<q
 ... | tri≈ _ u≡q _   = ⊥-elim (<-irrefl refl
                            (subst (λ z → u * u < z * z) (sym u≡q) uu<qq))
 ... | tri> _ _ q<u   =
@@ -276,6 +245,16 @@ embedℚ-reflect p t (n , h) = <-trans p<δp (<-trans h' negδt<t)
   negδt<t = negδ-add-lt t n
 
 ------------------------------------------------------------------------
+-- Non-strict monotonicity of the rational embedding
+--
+-- 有理嵌入的非严格单调性
+
+embedℚ-≤ : (p t : ℚ) → p ≤ t → embedℚ p ≤ℝ embedℚ t
+embedℚ-≤ p t p≤t emb< =
+  <-irrefl {x = p} {y = p} refl
+    (≤-<-trans p≤t (embedℚ-reflect t p emb<))
+
+------------------------------------------------------------------------
 -- Widening a square bound by a small rational step
 --
 -- 平方界的有理小幅外扩
@@ -292,7 +271,7 @@ sq-widen p s 0≤p pp<s = r , p<r , rr<s
   d = s - p * p
 
   0<d : 0ℚ < d
-  0<d = sub-pos (p * p) s pp<s
+  0<d = pos-diff (p * p) s pp<s
 
   0≤p+p : 0ℚ ≤ p + p
   0≤p+p = subst (λ z → z ≤ p + p) (+-identityˡ 0ℚ) (+-mono-≤ 0≤p 0≤p)
@@ -432,7 +411,7 @@ sq-widen p s 0≤p pp<s = r , p<r , rr<s
            (*-monoˡ-<-pos c {{positive 0<c}} h<g)
 
   p2d<s : p * p + h * c < s
-  p2d<s = subst (λ z → p * p + h * c < z) (a+d≡b (p * p) s)
+  p2d<s = subst (λ z → p * p + h * c < z) (plus-diff (p * p) s)
             (+-monoʳ-< (p * p) hc<d)
 
   rr<s : r * r < s

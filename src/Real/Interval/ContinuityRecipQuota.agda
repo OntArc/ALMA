@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
--- Quota and accounting: scale, closing, mid, total, accounting, minimum, picking
+-- Quota accounting for the reciprocal chain
 --
--- 额度与核算：尺度、闭合、中层、总额、记账、最小值与选取
+-- 倒数链的额度核算
 ------------------------------------------------------------------------
 
 {-# OPTIONS --safe --cubical-compatible --guardedness --exact-split --double-check #-}
@@ -21,11 +21,13 @@ open import Relation.Binary.PropositionalEquality using
 open ≡-Reasoning
 
 open import Base.RationalRing using (+interchange)
+open import Real.Interval.Rational using (add-then-drop)
 open import Real using (half; ε; embed; 0<ε; embed-+-hom)
 open import Real.Interval using (δ)
 open import Real.Interval.ContinuityRecipBudget using
   (d-eight; 0<mul; 0<inv; coef2; coef4; 0<embed-suc; coef3; 0<3; 0<6; budget-eq
   ; budget-split)
+open import Real.Interval.OrderLaws using (halved-tolerance-below)
 open import Real.Interval.ContinuityRecipBasic using (pos-meet)
 open import Real.Interval.Kit using (two-half; 0<half)
 
@@ -327,17 +329,6 @@ acct W d = let
   ∎
 
 ------------------------------------------------------------------------
--- Subtracting a summand gives back the other summand
---
--- 减掉一个加项还回另一个
-
-add-sub-self : (a b : ℚ) → (a + b) - b ≡ a
-add-sub-self a b =
-  trans (+-assoc a b (- b))
-        (trans (cong (λ z → a + z) (+-inverseʳ b))
-               (+-identityʳ a))
-
-------------------------------------------------------------------------
 -- Subtracting half gives back half
 --
 -- 减去一半还回一半
@@ -345,7 +336,7 @@ add-sub-self a b =
 half-sub : (p : ℚ) → p - p * half ≡ p * half
 half-sub p =
   trans (cong (λ z → z - p * half) (sym (two-half p)))
-        (add-sub-self (p * half) (p * half))
+        (add-then-drop (p * half) (p * half))
 
 ------------------------------------------------------------------------
 -- The meet of the two allowances
@@ -405,27 +396,6 @@ d-eight-le d c u 0c 0u d≤ =
                        (*-comm (cc * u) (embed 8)))
                  (d-eight c2 u {{nzcc}})
   in subst (λ z → (d * embed 8) * invcc ≤ z) eq step2
-
-------------------------------------------------------------------------
--- Multiplying by one half strictly shrinks a positive quantity
---
--- 正量乘二分之一严格变小
-
-half-mul-< : (u : ℚ) → 0ℚ < u → u * half < u
-half-mul-< u 0u =
-  let 0uh : 0ℚ < u * half
-      0uh = 0<mul u half 0u 0<half
-
-      s : u * half + 0ℚ < u * half + (u * half)
-      s = +-mono-≤-< (≤-refl {u * half}) 0uh
-
-      s' : u * half < u * half + u * half
-      s' = subst (λ z → z < u * half + u * half)
-                 (+-identityʳ (u * half)) s
-
-      h : u * half + u * half ≡ u
-      h = two-half u
-  in subst (λ z → u * half < z) h s'
 
 ------------------------------------------------------------------------
 -- The inverse of the embedded three
@@ -488,7 +458,7 @@ i3 = 1/_ (embed 3) {{pos⇒nonZero (embed 3) {{positive 0<3}}}}
         ∎
 
       lt : u * half < u
-      lt = half-mul-< u 0u
+      lt = halved-tolerance-below u 0u
   in q , 0q , subst (λ z → z < u) (sym triple) lt
 
 ------------------------------------------------------------------------
@@ -574,5 +544,5 @@ pick-q k c N 0c =
         ∎
 
       lt : u * half < u
-      lt = half-mul-< u 0u
+      lt = halved-tolerance-below u 0u
   in q , 0q , subst (λ z → z < u) (sym (trans reorder cancel)) lt

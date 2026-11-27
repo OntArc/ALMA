@@ -26,7 +26,7 @@ open import Real.Interval using (RealI; embedℚ; δ)
 open import Real.Interval.Arith using (0ℝ; _+ℝ_; _-ℝ_; negℝ)
 open import Real.Interval.ArithLaws using
   (+ℝ-comm; +ℝ-identityˡ; negℝ-negℝ; negℝ-0ℝ)
-open import Real.Interval.DensityArch using (width-0ℝ)
+open import Real.Interval.DensityArch using (width-0ℝ; dense; ≤ℝ-of-slack)
 open import Real.Interval.Embed using (embedℚ-+; embedℚ-cong; centre-embedℚ)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym; ≈ℝ-refl; ≈ℝ-trans)
 open import Real.Interval.Kit using (≈ℝ-of-eq)
@@ -82,9 +82,6 @@ Continuous₂ f = ∀ x y → ContinuousAt₂ f x y
 -- 差的中心
 
 -- The centre of a difference is the difference of centres.
---
-
--- The centre of a difference against an embedded rational.
 --
 -- 与嵌入有理数作差后的中心。
 centre-sub-emb : (x : RealI) (q : ℚ) (n : ℕ) →

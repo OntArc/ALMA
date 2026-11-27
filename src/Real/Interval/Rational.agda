@@ -14,15 +14,18 @@ import Data.Integer.Properties as ℤP
 open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s; _^_; _∸_)
   renaming (_+_ to _+ℕ_; _*_ to _*ℕ_; _<_ to _<ℕ_)
 import Data.Nat.Properties as ℕP
-open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _⊓_; _⊔_; _+_; _-_; _*_; _<_
-  ; _≤_; 1/_; ∣_∣; fromℚᵘ; toℚᵘ; NonZero) renaming (-_ to neg)
+open import Data.Rational using
+ (ℚ; 0ℚ; 1ℚ; _⊓_; _⊔_; _+_; _-_; _*_; _<_; _≤_; 1/_; ∣_∣; fromℚᵘ; toℚᵘ
+ ; NonZero; Positive) renaming (-_ to neg)
+open import Data.Rational.Base using (_÷_; positive)
 open import Data.Rational.Properties using
   (+-comm; +-inverseʳ; neg-distrib-+; +-mono-<-≤; ≤-refl; *-assoc; *-identityˡ
   ; *-comm; <⇒≤; <-cmp; ≤-trans; *-inverseʳ; *-identityʳ; ≤-antisym
   ; neg-antimono-≤; 0≤∣p∣; ∣-p∣≡∣p∣; *-inverseˡ; ∣p∣≡p∨∣p∣≡-p
   ; 0≤p⇒∣p∣≡p; toℚᵘ-cancel-<; toℚᵘ-fromℚᵘ; p⊓q≤p; p⊓q≤q; p≤p⊔q; p≤q⊔p
   ; p≤q⇒p⊓q≡p; p≥q⇒p⊓q≡q; p≤q⇒p⊔q≡q; p≥q⇒p⊔q≡p; ⊓-glb; ⊔-lub; ⊓-sel; ⊔-sel
-  ; +-assoc; +-identityˡ)
+  ; +-assoc; +-identityˡ; +-identityʳ; positive⁻¹; 1/pos⇒pos; pos*pos⇒pos; *-monoˡ-<-pos
+  ; *-distribʳ-+; pos⇒nonZero)
 open import Data.Rational.Unnormalised.Base using
   (ℚᵘ; mkℚᵘ; _≃_; *≡*; *<*) renaming (_<_ to _<ᵘ_)
 open import Data.Rational.Unnormalised.Properties using (<-respˡ-≃; <-respʳ-≃)
@@ -34,18 +37,17 @@ open ≡-Reasoning
 open import Relation.Nullary.Negation using (¬_)
 open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
 
-open import Base.RationalRing using (neg-involutive; sub-add-split)
+open import Base.RationalRing using (neg-involutive; sub-add-split; swap-mid)
 open import Real.Interval.Reasoning using (begin≤_; _≈⟨_⟩_; _≤⟨_⟩_; _≤∎)
 
 ------------------------------------------------------------------------
 -- Positive difference
 --
+-- 正差
+
 -- a < b implies 0 < b − a.
 --
--- 正差
---
 -- 由 a < b 得正差。
-
 pos-diff : ∀ a b → a < b → 0ℚ < b - a
 pos-diff a b a<b =
   subst (λ z → z < b - a)
@@ -55,20 +57,59 @@ pos-diff a b a<b =
 ------------------------------------------------------------------------
 -- Algebra of subtraction
 --
--- sub-add distributes subtraction over addition; cancel-plus cancels a
--- common addend; negsub and neg-sub flip differences.
---
 -- 减法代数
+
+-- a + (b - a) is b: the difference cancels against its minuend
+-- sub-add distributes subtraction over addition; cancel-plus cancels a
+-- common addend; negsub and neg-sub flip differences. plus-diff cancels
+-- the difference against the addend it was taken from.
 --
+-- a + (b - a) 就是 b：差与被减数相消
 -- sub-add 把减法分配到加法；cancel-plus 消去公共加项；negsub 与
--- neg-sub 翻转差。
+-- neg-sub 翻转差。plus-diff 把差与其被减数相消。
+plus-diff : (a b : ℚ) → a + (b - a) ≡ b
+plus-diff a b =
+  begin
+    a + (b + neg a)   ≡⟨ sym (+-assoc a b (neg a)) ⟩
+    (a + b) + neg a   ≡⟨ cong (_+ neg a) (+-comm a b) ⟩
+    (b + a) + neg a   ≡⟨ +-assoc b a (neg a) ⟩
+    b + (a + neg a)   ≡⟨ cong (λ z → b + z) (+-inverseʳ a) ⟩
+    b + 0ℚ            ≡⟨ +-identityʳ b ⟩
+    b                 ∎
+
+-- Regrouping three summands.
+--
+-- 三个加项的重排。
++rearrange : (a b c : ℚ) → (a + b) + c ≡ (a + c) + b
++rearrange a b c =
+  begin
+    (a + b) + c  ≡⟨ +-assoc a b c ⟩
+    a + (b + c)  ≡⟨ cong (λ z → a + z) (+-comm b c) ⟩
+    a + (c + b)  ≡⟨ sym (+-assoc a c b) ⟩
+    (a + c) + b  ∎
+
+-- Adding then dropping the same addend.
+--
+-- 加上再减去同一加项。
+add-then-drop : (a s : ℚ) → (a + s) - a ≡ s
+add-then-drop a s =
+  begin
+    (a + s) - a       ≡⟨ refl ⟩
+    (a + s) + neg a   ≡⟨ +-assoc a s (neg a) ⟩
+    a + (s + neg a)   ≡⟨ cong (λ z → a + z) (+-comm s (neg a)) ⟩
+    a + (neg a + s)   ≡⟨ sym (+-assoc a (neg a) s) ⟩
+    (a + neg a) + s   ≡⟨ cong (_+ s) (+-inverseʳ a) ⟩
+    0ℚ + s            ≡⟨ +-identityˡ s ⟩
+    s                 ∎
 
 sub-add : (a b c d : ℚ) → (a + b) - (c + d) ≡ (a - c) + (b - d)
 sub-add a b c d = sub-add-split a c b d
 
--- (x + y) − (x + z) ≡ y − z。
+------------------------------------------------------------------------
+-- Cancelling a common addend
 --
--- 消去公共加项。
+-- 消去公共加项
+
 cancel-plus : ∀ x y z → (x + y) - (x + z) ≡ y - z
 cancel-plus x y z = begin
   (x + y) - (x + z)
@@ -123,12 +164,11 @@ neg-sub-neg a b = begin
 ------------------------------------------------------------------------
 -- Trichotomy elimination
 --
+-- 三歧性消去
+
 -- From a proof of each of the three cases, build a proof of P.
 --
--- 三歧性消去
---
 -- 由三种情形的证明构造 P 的证明。
-
 tri-elim : ∀ {P : Set} (a b : ℚ)
   → (a < b → P) → (a ≡ b → P) → (b < a → P) → P
 tri-elim a b lt eq gt =
@@ -159,16 +199,15 @@ min<max a b a≠b = tri-elim a b
 ------------------------------------------------------------------------
 -- Absolute value and magnitude bounds
 --
+-- 绝对值与量级界
+
 -- The two elementary absolute-value bounds state that both r and -r
 -- are at most |r|. The magnitude combines the endpoint absolute values
 -- into their maximum, and mag-≤ shows that any point inside an interval
 -- is bounded by that maximum.
 --
--- 绝对值与量级界
---
 -- 两条基本绝对值界给出 r 与 -r 都不超过 |r|；mag 将端点绝对值
 -- 合并为上确界，mag-≤ 表明区间内任意点的绝对值不超过该上确界。
-
 r≤|r| : ∀ r → r ≤ ∣ r ∣
 r≤|r| r =
   let
@@ -266,19 +305,19 @@ suc∸1 {n} 0<n = begin
 0<sucd*2^t : (d t : ℕ) → 0 <ℕ suc d *ℕ 2 ^ t
 0<sucd*2^t d t = ℕP.≤-trans (0<2^t t) (ℕP.m≤n*m (2 ^ t) (suc d))
 
--- Raw combined fraction N / (suc d * 2^t).
+-- Raw combined fraction N / (suc d * 2^t)
 -- mkℚᵘ's second argument is denominator - 1, so to get denominator
 -- (suc d) * 2^t we pass (suc d) * 2^t ∸ 1.
 --
--- 原始组合分数。
+-- 原始组合分数
 -- mkℚᵘ 的第二参数是分母减一，故传入相应的减一值。
 rawComb : (N d t : ℕ) → ℚᵘ
 rawComb N d t = mkℚᵘ (+ N) (suc d *ℕ 2 ^ t ∸ 1)
 
--- Raw right-hand side 1/(suc k).
+-- Raw right-hand side 1/(suc k)
 -- mkℚᵘ (+ 1) k has denominator suc k, hence value 1/(suc k).
 --
--- 原始右端。
+-- 原始右端
 -- mkℚᵘ (+ 1) k 的分母为 suc k。
 rawR : (k : ℕ) → ℚᵘ
 rawR k = mkℚᵘ (+ 1) k
@@ -422,3 +461,184 @@ max-neg a b = ≤-antisym upper lower
             neg b              ≤⟨ p≤q⊔p (neg a) (neg b) ⟩
             (neg a) ⊔ (neg b)  ≤∎
       in helper (⊓-sel a b)
+
+------------------------------------------------------------------------
+-- Division and the order of products
+--
+-- 除法与乘积的序
+
+-- Locatedness of the exponential cut has to drive a product
+-- h * (1 + B₀) below a fixed positive rational. Two ingredients are
+-- needed: cancelling _÷_ against its divisor, and getting positivity and
+-- strict monotonicity for products whose factors are abstract terms. The
+-- stdlib positivity predicates are shaped on canonical proofs, so every
+-- factor that carries one here is an embedding of a natural number, and
+-- the predicates are taken as instances rather than rebuilt.
+--
+-- 指数割的定位性要把乘积 h*(1+B₀) 压到一个固定的正有理数之下。需要两件：
+-- 把 _÷_ 与其除数相消，以及在因子为抽象项时拿到乘积的正性与严格单调
+-- stdlib 的正性谓词建立在规范形状的证明上，所以这里带正性的因子一律取
+-- 自然数嵌入，谓词以实例传入而不现场重建。
+÷-cancel : ∀ a d → {{_ : NonZero d}} → (a ÷ d) * d ≡ a
+÷-cancel a d =
+  begin
+    (a * (1/ d)) * d  ≡⟨ *-assoc a (1/ d) d ⟩
+    a * ((1/ d) * d)  ≡⟨ cong (a *_) (*-inverseˡ d) ⟩
+    a * 1ℚ            ≡⟨ *-identityʳ a ⟩
+    a                 ∎
+
+-- The quotient is the product with the reciprocal by definition, so the
+-- statement below is phrased on that product; writing it with `_÷_` would
+-- fix a different `NonZero` argument than the one `1/pos⇒pos` produces.
+--
+-- 商按定义就是与该倒数的乘积，所以下述命题直接写在这个乘积上；若用 _÷_ 写，
+-- 会钉住一个与 1/pos⇒pos 产出的不同的 NonZero 参数。
+÷-pos : ∀ a d → {{_ : Positive d}} → 0ℚ < a
+     → 0ℚ < a * (1/_ d {{pos⇒nonZero d}})
+÷-pos a d a>0 =
+  positive⁻¹ (a * (1/_ d {{pos⇒nonZero d}}))
+    {{pos*pos⇒pos a {{positive a>0}} (1/_ d {{pos⇒nonZero d}}) {{1/pos⇒pos d}}}}
+
+*-<-mono-right : ∀ a b c → a < b → 0ℚ < c → a * c < b * c
+*-<-mono-right a b c a<b 0<c = *-monoˡ-<-pos c {{positive 0<c}} a<b
+
+------------------------------------------------------------------------
+-- Slack for two quotients
+--
+-- 两个商的松弛
+
+-- Locatedness needs d + d < q - p for the tolerance d = (q - p) / dv,
+-- where dv is a natural embedding above two. The estimate reduces to
+-- (1/dv) + (1/dv) < 1, which follows from 2 < dv by multiplying with the
+-- positive reciprocal.
+--
+-- 定位性需要容差 d = (q - p) / dv 满足 d + d < q - p，其中 dv 是大于二的
+-- 自然数嵌入。该估计归结为 (1/dv) + (1/dv) < 1，由 2 < dv 乘以正倒数得到。
+double : (x : ℚ) → (1ℚ + 1ℚ) * x ≡ x + x
+double x =
+  begin
+    (1ℚ + 1ℚ) * x    ≡⟨ *-distribʳ-+ x 1ℚ 1ℚ ⟩
+    1ℚ * x + 1ℚ * x  ≡⟨ cong₂ _+_ (*-identityˡ x) (*-identityˡ x) ⟩
+    x + x            ∎
+
+recip-add-lt-one : (d : ℚ) → ⦃ pd : Positive d ⦄ → (1ℚ + 1ℚ) < d
+                 → (1/_ d {{pos⇒nonZero d}}) + (1/_ d {{pos⇒nonZero d}}) < 1ℚ
+recip-add-lt-one d {{pd}} 2<d =
+  let
+    r : ℚ
+    r = 1/_ d {{pos⇒nonZero d}}
+
+    0<r : 0ℚ < r
+    0<r = positive⁻¹ r {{1/pos⇒pos d {{pd}}}}
+
+    stepped : (1ℚ + 1ℚ) * r < d * r
+    stepped = *-<-mono-right (1ℚ + 1ℚ) d r 2<d 0<r
+
+    dr≡1 : d * r ≡ 1ℚ
+    dr≡1 = trans (*-comm d r) (*-inverseˡ d {{pos⇒nonZero d}})
+  in
+    subst (λ z → r + r < z) dr≡1
+      (subst (λ z → z < d * r) (double r) stepped)
+
+------------------------------------------------------------------------
+-- The reciprocal reverses strict comparisons, and undoes itself
+--
+-- 倒数反转严格比较，并且自逆
+
+-- 0 < a < b implies 1/b < 1/a
+-- Both statements are about positive rationals only, so the positivity
+-- evidence is the argument that fixes the NonZero instance of the
+-- reciprocal throughout; writing 1/_ x {{pos⇒nonZero x}} keeps that
+-- instance literally the same term as the one inside 1/pos⇒pos and
+-- *-inverseˡ/ʳ, which is what the two subst steps compare.
+--
+-- 由 0 < a < b 得 1/b < 1/a
+-- 两条命题只涉及正有理数，故以正性证据作为钉住倒数 NonZero 实例的自变量；
+-- 一律写 1/_ x {{pos⇒nonZero x}}，可让该实例与 1/pos⇒pos 及 *-inverseˡ/ʳ
+-- 内部的实例是同一段文本，这正是两处 subst 所比较的东西。
+recip-lt-of-lt : (a b : ℚ) → ⦃ pa : Positive a ⦄ → ⦃ pb : Positive b ⦄
+               → a < b → 1/_ b {{pos⇒nonZero b}} < 1/_ a {{pos⇒nonZero a}}
+recip-lt-of-lt a b a<b =
+  let
+    r-a : ℚ
+    r-a = 1/_ a {{pos⇒nonZero a}}
+
+    r-b : ℚ
+    r-b = 1/_ b {{pos⇒nonZero b}}
+
+    0<r-a : 0ℚ < r-a
+    0<r-a = positive⁻¹ r-a {{1/pos⇒pos a}}
+
+    0<r-b : 0ℚ < r-b
+    0<r-b = positive⁻¹ r-b {{1/pos⇒pos b}}
+
+    -- Multiply `a < b` by the positive reciprocal of `a`.
+    --
+    -- 把 `a < b` 乘以 `a` 的正倒数。
+    step1 : a * r-a < b * r-a
+    step1 = *-<-mono-right a b r-a a<b 0<r-a
+
+    step1' : 1ℚ < b * r-a
+    step1' = subst (λ z → z < b * r-a) (*-inverseʳ a {{pos⇒nonZero a}}) step1
+
+    step1'' : 1ℚ < r-a * b
+    step1'' = subst (λ z → 1ℚ < z) (sym (*-comm r-a b)) step1'
+
+    -- Then multiply that by the positive reciprocal of `b`.
+    --
+    -- 再把它乘以 `b` 的正倒数。
+    step2 : 1ℚ * r-b < (r-a * b) * r-b
+    step2 = *-<-mono-right 1ℚ (r-a * b) r-b step1'' 0<r-b
+
+    step2' : r-b < (r-a * b) * r-b
+    step2' = subst (λ z → z < (r-a * b) * r-b) (*-identityˡ r-b) step2
+
+    right-eq : (r-a * b) * r-b ≡ r-a
+    right-eq =
+      trans (*-assoc r-a b r-b)
+        (trans (cong (r-a *_) (*-inverseʳ b {{pos⇒nonZero b}})) (*-identityʳ r-a))
+  in
+    subst (λ z → r-b < z) right-eq step2'
+------------------------------------------------------------------------
+-- Multiplication and addition of quotients
+--
+-- 商的乘法与加法
+
+-- Numerator multiplies numerator and denominator multiplies denominator.
+--
+-- 分子与分子相乘，分母与分母相乘。
+÷-mul : (a b c d : ℚ) ⦃ nb : NonZero b ⦄ ⦃ nd : NonZero d ⦄
+        ⦃ nbd : NonZero (b * d) ⦄
+      → (a ÷ b) * (c ÷ d) ≡ (a * c) ÷ (b * d)
+÷-mul a b c d ⦃ nb ⦄ ⦃ nd ⦄ ⦃ nbd ⦄ = begin
+  (a ÷ b) * (c ÷ d)
+    ≡⟨ swap-mid a (1/ b) c (1/ d) ⟩
+  (a * c) * ((1/ b) * (1/ d))
+    ≡⟨ cong ((a * c) *_) (sym (recip-*-hom b d)) ⟩
+  (a * c) * (1/ (b * d))
+    ≡⟨⟩
+  (a * c) ÷ (b * d) ∎
+
+-- A common denominator distributes over a sum.
+--
+-- 同分母的商对和分配。
+÷-distribʳ-+ : (a b c : ℚ) ⦃ nc : NonZero c ⦄
+             → (a + b) ÷ c ≡ (a ÷ c) + (b ÷ c)
+÷-distribʳ-+ a b c = *-distribʳ-+ (1/ c) a b
+------------------------------------------------------------------------
+-- Powers in ℚ
+--
+-- ℚ 的幂
+
+-- Iterated multiplication with the exponent on the right.
+--
+-- 指数在右的反复乘法。
+powQ : ℚ → ℕ → ℚ
+powQ q zero    = 1ℚ
+powQ q (suc k) = q * powQ q k
+
+-- One unfolding of the recursion.
+--
+-- 递推的一次展开。
+powQ-suc : (q : ℚ) (k : ℕ) → powQ q (suc k) ≡ q * powQ q k
+powQ-suc q k = refl

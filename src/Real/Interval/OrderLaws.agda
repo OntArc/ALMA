@@ -47,21 +47,19 @@ open import Real.Archimedean using (ε-archimedean)
 ------------------------------------------------------------------------
 -- Basic order-theoretic facts
 --
+-- 基本序论事实
+
+-- A width below any positive rational
 -- About _<ℝ_ and _≈ℝ_ on RealI: an ε and a width below any positive
 -- rational, decrease of width with depth, the upper bound
 -- u ≤ centre + width, compatibility of order with approximate
 -- equality, and monotonicity of order under addition, negation and
 -- subtraction.
 --
--- 基本序论事实
---
+-- 任意正有理数下方有宽度
 -- RealI 上 _<ℝ_ 与 _≈ℝ_ 的基本序论事实：任意正有理数下方有 ε 与
 -- 宽度，宽度随深度递减，上界由中心与宽度控制，序与近似相等相容，
 -- 序在加法、取负与减法下单调。
-
--- A width below any positive rational
---
--- 任意正有理数下方有宽度
 width-below : (r : RealI) (b : ℚ) → 0ℚ < b → Σ ℕ (λ m → width r m < b)
 width-below r b 0<b = M , result
   where
@@ -147,7 +145,7 @@ width-below r b 0<b = M , result
     -- embed (2^m) * em-inv ≡ 1.
     --
     -- recipPow2 m 的分母等于 embed (2^m)，故
-    -- embed (2^m) * em-inv ≡ 1。
+    -- 即 embed (2^m) * em-inv ≡ 1。
     s : ℚ
     s = embed (suc (2 ^ M ∸ 1))
 
@@ -189,9 +187,11 @@ width-below r b 0<b = M , result
                (≤-<-trans (≤-reflexive (cong (w0 *_) recipPow2-eq))
                           w0-em-inv<b)
 
+------------------------------------------------------------------------
 -- Widths decrease with depth
 --
 -- 宽度随深度递减
+
 width-step-dec : (r : RealI) (n : ℕ) → width r (suc n) ≤ width r n
 width-step-dec r n =
   ≤-trans (width-1step r n)
@@ -221,9 +221,11 @@ width-dec r {n} {m} n≤m =
              ∎)
         (width-mono-ge r n (m ∸ n))
 
+------------------------------------------------------------------------
 -- width-below with a lower bound
 --
 -- 带下界的 width-below
+
 width-below-strict : (r : RealI) (b : ℚ) (M₀ : ℕ) → 0ℚ < b
   → Σ ℕ (λ m → M₀ ≤ℕ m × width r m < b)
 width-below-strict r b M₀ 0<b =
@@ -312,6 +314,31 @@ half+half²<1 =
         ∎)
     (subst (λ z → d * (half + half * half) < z) (*-identityʳ d)
            (*-monoʳ-<-pos d {{positive 0<d}} half+half²<1))
+
+------------------------------------------------------------------------
+-- Halved tolerances
+--
+-- 折半的容差
+
+-- Half of a positive tolerance is positive.
+--
+-- 正容差的一半为正。
+halved-tolerance-pos : (d : ℚ) → 0ℚ < d → 0ℚ < d * half
+halved-tolerance-pos d 0<d =
+  subst (λ z → z < d * half) (*-zeroˡ half)
+    (*-monoˡ-<-pos half {{positive 0<half}} 0<d)
+
+-- Half of a positive tolerance is strictly below it.
+--
+-- 正容差的一半严格小于它。
+halved-tolerance-below : (d : ℚ) → 0ℚ < d → d * half < d
+halved-tolerance-below d 0<d =
+  let step₁ : d * half < 1ℚ * d
+      step₁ = subst (λ z → z < 1ℚ * d) (sym (*-comm d half))
+                (*-monoˡ-<-pos d {{positive 0<d}} half<1)
+      step₂ : d * half < d
+      step₂ = subst (λ z → d * half < z) (*-identityˡ d) step₁
+  in step₂
 
 ------------------------------------------------------------------------
 -- Compatibility of order with equivalence

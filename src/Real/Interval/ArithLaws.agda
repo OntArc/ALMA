@@ -1,14 +1,7 @@
 ------------------------------------------------------------------------
 -- Additive group laws for RealI
 --
--- Every law is proved via ≈ℝ-of-eq: addition and negation act
--- componentwise on centres, so both sides have pointwise equal centres
--- and the convergence engine trivialises.
---
 -- RealI 的加法群律
---
--- 每个定律都经 ≈ℝ-of-eq 证明：加法与取负对中心逐分量作用，故等式
--- 两侧中心逐点相等，收敛引擎退化为平凡。
 ------------------------------------------------------------------------
 
 {-# OPTIONS --safe --cubical-compatible --guardedness --exact-split --double-check #-}
@@ -31,9 +24,11 @@ open import Real.Interval.Equiv using (_≈ℝ_)
 open import Real.Interval.Kit using (≈ℝ-of-eq)
 open import Real.Interval.Node using (centre-add; centre-neg; centre-0ℝ)
 
+------------------------------------------------------------------------
 -- Associativity
 --
 -- 结合律
+
 +ℝ-assoc : (x y z : RealI) →
            (x +ℝ y) +ℝ z ≈ℝ x +ℝ (y +ℝ z)
 +ℝ-assoc x y z = ≈ℝ-of-eq _ _ λ n →
@@ -69,9 +64,11 @@ open import Real.Interval.Node using (centre-add; centre-neg; centre-0ℝ)
       centre (x +ℝ (y +ℝ z)) n
     ∎
 
+------------------------------------------------------------------------
 -- Commutativity
 --
 -- 交换律
+
 +ℝ-comm : (x y : RealI) → x +ℝ y ≈ℝ y +ℝ x
 +ℝ-comm x y = ≈ℝ-of-eq _ _ λ n →
   begin
@@ -84,9 +81,11 @@ open import Real.Interval.Node using (centre-add; centre-neg; centre-0ℝ)
     centre (y +ℝ x) n
   ∎
 
+------------------------------------------------------------------------
 -- Identities
 --
 -- 单位元
+
 +ℝ-identityˡ : (x : RealI) → 0ℝ +ℝ x ≈ℝ x
 +ℝ-identityˡ x = ≈ℝ-of-eq _ _ λ n →
   begin
@@ -111,9 +110,11 @@ open import Real.Interval.Node using (centre-add; centre-neg; centre-0ℝ)
     centre x n
   ∎
 
+------------------------------------------------------------------------
 -- Inverses
 --
 -- 逆元
+
 +ℝ-inverseˡ : (x : RealI) → negℝ x +ℝ x ≈ℝ 0ℝ
 +ℝ-inverseˡ x = ≈ℝ-of-eq _ _ λ n →
   begin
@@ -142,9 +143,11 @@ open import Real.Interval.Node using (centre-add; centre-neg; centre-0ℝ)
     centre 0ℝ n
   ∎
 
+------------------------------------------------------------------------
 -- Negation involution
 --
 -- 取负对合
+
 negℝ-negℝ : (x : RealI) → negℝ (negℝ x) ≈ℝ x
 negℝ-negℝ x = ≈ℝ-of-eq _ _ λ n →
   begin
@@ -169,9 +172,11 @@ negℝ-0ℝ = ≈ℝ-of-eq _ _ λ n →
     centre 0ℝ n
   ∎
 
+------------------------------------------------------------------------
 -- Derived laws
 --
 -- 导出律
+
 x-ℝx : (x : RealI) → x -ℝ x ≈ℝ 0ℝ
 x-ℝx x = +ℝ-inverseʳ x
 
@@ -227,4 +232,38 @@ x-ℝx x = +ℝ-inverseʳ x
       (cx + cz) + ncy
     ≡⟨ sym rhs ⟩
       centre ((x +ℝ z) -ℝ y) n
+    ∎
+
+-- Subtracting then adding back cancels
+-- The centre of `x -ℝ y` is `cx - cy`, and `(cx - cy) + cy` collapses
+-- through associativity and the additive inverse.
+--
+-- 减去再加回相消
+-- `x -ℝ y` 的中心是 `cx - cy`，`(cx - cy) + cy` 经结合律与加法逆元收缩。
+sub-add-cancelℝ : (x y : RealI) → (x -ℝ y) +ℝ y ≈ℝ x
+sub-add-cancelℝ x y = ≈ℝ-of-eq _ _ λ n →
+  let
+    cx = centre x n
+    cy = centre y n
+
+    sub : centre (x -ℝ y) n ≡ cx + neg cy
+    sub = begin
+        centre (x -ℝ y) n
+      ≡⟨ centre-add x (negℝ y) n ⟩
+        cx + centre (negℝ y) n
+      ≡⟨ cong (λ w → cx + w) (centre-neg y n) ⟩
+        cx + neg cy
+      ∎
+  in begin
+      centre ((x -ℝ y) +ℝ y) n
+    ≡⟨ centre-add (x -ℝ y) y n ⟩
+      centre (x -ℝ y) n + cy
+    ≡⟨ cong (λ w → w + cy) sub ⟩
+      (cx + neg cy) + cy
+    ≡⟨ +-assoc cx (neg cy) cy ⟩
+      cx + (neg cy + cy)
+    ≡⟨ cong (λ w → cx + w) (+-inverseˡ cy) ⟩
+      cx + 0ℚ
+    ≡⟨ +-identityʳ cx ⟩
+      cx
     ∎

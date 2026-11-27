@@ -38,6 +38,7 @@ open import Real using
 open import Real.CauchyToInterval using
   (cauchy→realI; centre-cauchy→realI; M; K; ε-K<δ-suc)
 open import Real.Interval using (RealI; δ; δ-half; δs≤δ; embedℚ; sub-cancel)
+open import Real.Interval.Rational using (plus-diff)
 open import Real.Interval.Order using (_<ℝ_)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-refl; ≈ℝ-sym)
 open import Real.IntervalEquiv using
@@ -46,7 +47,7 @@ open import Real.IntervalEquiv using
 open import Real.Interval.Kit using
   (tail-bound; ≈ℝ-of-rec; strict-recip; recipPow2-mono; two-half; half≤1)
 open import Real.Interval.OrderComplete.Base using
-  (Subset; Located; Bracket; _≤ℝ_; δ-dec; a+d≡b; ≤ℝ-trans)
+  (Subset; Located; Bracket; _≤ℝ_; δ-dec; ≤ℝ-trans)
 open import Real.Interval.OrderComplete.Bisect using
   (bw; bw-pos; bw-nn; initBracket; widenBracket; cbr-seq; cwb; step₃-a≤a
   ; step₃-b≤b; step₃-shrink)
@@ -1200,7 +1201,6 @@ module _ {f : ℕ → RealI}
   -- bracket j.
   --
   -- 上确界中心相对第 j 层括号的半宽下界。
-
   cs-lo-b-half : ∀ j t → j ≥N t →
     a j - (bw (br-seq t) - bw (br-seq j)) * half ≤ centre s t
   cs-lo-b-half j t j≥t =
@@ -1216,7 +1216,9 @@ module _ {f : ℕ → RealI}
         aj+wj≤at+wt =
           subst (λ q → a j + wj ≤ q) bt=at+wt
             (subst (λ q → q ≤ b t) bj=aj+wj bj≤bt)
-        -- a j - a t ≤ wt - wj
+        -- The lower bound `a j - a t ≤ wt - wj`.
+        --
+        -- 下界 `a j - a t ≤ wt - wj`。
         aj-at≤ : a j - a t ≤ wt - wj
         aj-at≤ =
           let lhs≡ : (a j + wj) - (a t + wj) ≡ a j - a t
@@ -1333,7 +1335,7 @@ module _ {f : ℕ → RealI}
                     ≡-Reasoning.≡⟨ cong (a j +_) (sym neg-diff/2) ⟩
                   a j + neg (d * half)
                     ≡-Reasoning.≡⟨ cong (λ q → q + neg (d * half))
-                            (sym (a+d≡b (a t) (a j))) ⟩
+                            (sym (plus-diff (a t) (a j))) ⟩
                   (a t + (a j - a t)) + neg (d * half)
                     ≡-Reasoning.≡⟨ +-assoc (a t) (a j - a t) (neg (d * half)) ⟩
                   a t + ((a j - a t) + neg (d * half))
@@ -1386,10 +1388,14 @@ module _ {f : ℕ → RealI}
               hi = reg-hi-half M n m fn≤bM
               lo : a M - δ m - w * half ≤ reg (f n) t
               lo = reg-lo-half M n m aM≤fn
-              -- centre L t ≡ a M
+              -- The centre at level `t`: `centre L t ≡ a M`.
+              --
+              -- 层级 `t` 的中心：`centre L t ≡ a M`。
               cL : centre L t ≡ a M
               cL = cL≡ t
-              -- bw (br-seq M) + δ m ≤ δ t
+              -- The width-plus-tolerance bound `bw (br-seq M) + δ m ≤ δ t`.
+              --
+              -- 宽度加容差界 `bw (br-seq M) + δ m ≤ δ t`。
               bwM : bw (br-seq M) ≤ bw br0 * recipPow2 M
               bwM = bw≤ M
               m≥t+3 : m ≥N suc (suc (suc t))
@@ -1424,12 +1430,16 @@ module _ {f : ℕ → RealI}
                             ≤ δ (suc t) + δ (suc (suc (suc t)))
                     sum = +-mono-≤ (<⇒≤ bw<δ) δm≤
                 in ≤-trans sum (δ-sum≤δ t)
-              -- w * half < ε (suc t) * half
+              -- The halved width `w * half < ε (suc t) * half`.
+              --
+              -- 折半后的宽度 `w * half < ε (suc t) * half`。
               w< : w < ε (suc t)
               w< = width-i (f n) t
               w/2< : w * half < ε (suc t) * half
               w/2< = *-monoˡ-<-pos half w<
-              -- total < ε t
+              -- The total error bound `total < ε t`.
+              --
+              -- 总误差界 `total < ε t`。
               total : ∣ reg (f n) t - a M ∣ < ε t
               total =
                 let bwM = b M - a M

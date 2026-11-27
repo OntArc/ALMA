@@ -15,7 +15,7 @@ open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _≤_; _<_; _+_; _*_)
 open import Data.Rational.Base using (1/_; positive; Positive; nonNegative)
 open import Data.Rational.Properties using
   (≤-refl; ≤-trans; <⇒≤; +-identityˡ; +-identityʳ; +-assoc; +-monoˡ-≤
-  ; +-monoʳ-≤; 1/pos⇒pos; pos⇒nonZero; positive⁻¹; +-comm
+  ; +-monoʳ-≤; +-mono-≤; ≤-<-trans; 1/pos⇒pos; pos⇒nonZero; positive⁻¹; +-comm
   ; *-zeroʳ; *-identityʳ; *-assoc; *-comm; *-inverseˡ; *-inverseʳ; *-distribˡ-+
   ; *-distribʳ-+; *-monoˡ-≤-nonNeg; *-monoʳ-≤-nonNeg)
 open import Data.Sum using (inj₁; inj₂)
@@ -25,26 +25,37 @@ open ≡-Reasoning
 
 open import Base.RationalRing using (+interchange; 0≤1)
 open import Real using (embed; 0<embed; embed-+-hom)
+open import Real.Archimedean using (le-add-right)
+open import Real.Interval using (embedℚ; RealI)
+open import Real.Interval.Arith using (_+ℝ_; _-ℝ_; 0ℝ)
+open import Real.Interval.ArithLaws using
+  (+ℝ-comm; +ℝ-identityˡ; +ℝ-identityʳ; sub-add-cancelℝ)
+open import Real.Interval.Continuity using (Close; 0<embedℚ; embedℚ-mono)
+open import Real.Interval.DensityArch using (≤ℝ-of-slack)
+open import Real.Interval.Embed using (embedℚ-+)
+open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym)
 open import Real.Interval.Exp.Core as ExpCore using
   (term; term-suc; term-nonNeg; expPartial; sumQ-mono; div-suc-nonNeg
-  ; sucNonZero; sumQ; _≤ℕ_)
-open import Real.Interval.Exp.Order using (term-one)
-open import Real.Interval.Series.Bounds using (le-self-add)
+  ; sucNonZero; sumQ; _≤ℕ_; expq; expPartial-zero)
+open import Real.Interval.Exp.Order using (term-one; expq-mono)
+open import Real.Interval.Exp.Bracket using (expq-bracket)
+open import Real.Interval.Exp.PartialLe using (expPartial-le-expq)
+open import Real.Interval.Mul.Order using (≈-<-respʳ)
 open import Real.Interval.Node using (mul-nonNeg; add2-nonNeg)
+open import Real.Interval.Order using (_<ℝ_)
+open import Real.Interval.OrderLaws using (≈-<-resp; <-+mono)
+open import Real.Interval.OrderComplete.Base using (_≤ℝ_; ≤ℝ-trans; x<x+)
+open import Real.Interval.OrderLe using
+  (≈⇒≤ℝ; ≤ℝ-+-mono; ≤ℝ-<trans; <-+mono-reflect)
+open import Real.Interval.Sqrt.Bounds using (embedℚ-≤)
 
 ------------------------------------------------------------------------
 -- L7: ℚ-level Lipschitz and the global bound for expPartial
 --
 -- L7：ℚ 层 Lipschitz 与 expPartial 的整体界
 
-le-add-right : (a b : ℚ) (0≤b : 0ℚ ≤ b) → a ≤ a + b
-le-add-right a b 0≤b = le-self-add {a} {b} 0≤b
-
 prod-nonNeg : (a b : ℚ) (0≤a : 0ℚ ≤ a) (0≤b : 0ℚ ≤ b) → 0ℚ ≤ a * b
 prod-nonNeg a b 0≤a 0≤b = mul-nonNeg {a} {b} 0≤a 0≤b
-
-sum-nonNegℚ : (a b : ℚ) (0≤a : 0ℚ ≤ a) (0≤b : 0ℚ ≤ b) → 0ℚ ≤ a + b
-sum-nonNegℚ a b 0≤a 0≤b = add2-nonNeg {a} {b} 0≤a 0≤b
 
 inv-nonNeg : (z : ℚ) (P : Positive z) → 0ℚ ≤ 1/_ z {{pos⇒nonZero z {{P}}}}
 inv-nonNeg z P =
@@ -143,7 +154,7 @@ term-lip-suc q h 0≤q 0≤h zero =
 term-lip-suc q h 0≤q 0≤h (suc k) =
   let r = q + h
       0≤r : 0ℚ ≤ r
-      0≤r = sum-nonNegℚ q h 0≤q 0≤h
+      0≤r = add2-nonNeg 0≤q 0≤h
       E : ℚ
       E = embed (suc (suc k))
       E₁ : ℚ
@@ -348,3 +359,154 @@ expPartial-param-bnd : (p h : ℚ) (0≤p : 0ℚ ≤ p) (0≤h : 0ℚ ≤ h)
                      → expPartial (p + h) n ≤ expPartial p n + h * (1ℚ + C)
 expPartial-param-bnd p h 0≤p 0≤h n C bnd =
   expPartial-param-lip p h 0≤p 0≤h n (1ℚ + C) (shift-sum-bnd (p + h) C bnd)
+
+------------------------------------------------------------------------
+-- The Lipschitz bound lifted to the limit
+--
+-- 把 Lipschitz 界抬到极限上
+
+-- The partial sums obey the shift bound `P (p+h) ≤ P p + h * (1 + C)`
+-- uniformly in the index, and `expq` is the limit of the partial sums. At
+-- a fixed index the bracket of `expq-bracket` pins `expq (p+h)` above a
+-- partial sum with any prescribed slack, and that partial sum is already
+-- within the shift bound of the unshifted one — which in turn stays below
+-- `expq p`. A bound valid under every positive slack is a bound, so the
+-- tolerance disappears (`≤ℝ-of-slack`).
+--
+-- 部分和一致满足移位界 `P (p+h) ≤ P p + h * (1 + C)`，而 `expq` 是其极限
+-- 在固定指标处 `expq-bracket` 把 `expq (p+h)` 夹在某个部分和加上任意给定
+-- 的余量之内，而该部分和已落在未移位部分和的移位界内，后者又不超过
+-- `expq p`。对任意正余量都成立的界就是界（`≤ℝ-of-slack`），故余量
+-- 可以抹掉。
+expq-lip : (p h : ℚ) (0≤p : 0ℚ ≤ p) (0≤h : 0ℚ ≤ h)
+           (0≤p+h : 0ℚ ≤ p + h) (B : ℚ)
+           (bnd : (j : ℕ) → expPartial (p + h) j ≤ B)
+         → expq (p + h) 0≤p+h ≤ℝ expq p 0≤p +ℝ embedℚ (h * (1ℚ + B))
+expq-lip p h 0≤p 0≤h 0≤p+h B bnd =
+  let
+    H : ℚ
+    H = h * (1ℚ + B)
+
+    body : (d : ℚ) → 0ℚ < d
+         → expq (p + h) 0≤p+h ≤ℝ (expq p 0≤p +ℝ embedℚ H) +ℝ embedℚ d
+    body d 0<d =
+      let
+        N , (_ , high) = expq-bracket (p + h) 0≤p+h d 0<d
+
+        P₁ : ℚ
+        P₁ = expPartial p N
+
+        P₂ : ℚ
+        P₂ = expPartial (p + h) N
+
+        lipN : P₂ ≤ P₁ + H
+        lipN = expPartial-param-bnd p h 0≤p 0≤h N B bnd
+
+        qbound : P₂ + d ≤ (P₁ + H) + d
+        qbound = +-mono-≤ lipN (≤-refl {d})
+
+        embq : embedℚ (P₂ + d) ≤ℝ embedℚ ((P₁ + H) + d)
+        embq = embedℚ-≤ (P₂ + d) ((P₁ + H) + d) qbound
+
+        ex2 : embedℚ ((P₁ + H) + d) ≈ℝ embedℚ (P₁ + H) +ℝ embedℚ d
+        ex2 = embedℚ-+ (P₁ + H) d
+
+        p1 : embedℚ P₁ ≤ℝ expq p 0≤p
+        p1 = expPartial-le-expq p 0≤p N
+
+        addH : embedℚ P₁ +ℝ embedℚ H ≤ℝ expq p 0≤p +ℝ embedℚ H
+        addH = ≤ℝ-+-mono {z = embedℚ H} p1
+
+        fin : embedℚ (P₁ + H) ≤ℝ expq p 0≤p +ℝ embedℚ H
+        fin = ≤ℝ-trans (≈⇒≤ℝ (embedℚ-+ P₁ H)) addH
+
+        step : embedℚ ((P₁ + H) + d) ≤ℝ (expq p 0≤p +ℝ embedℚ H) +ℝ embedℚ d
+        step = ≤ℝ-trans (≈⇒≤ℝ ex2) (≤ℝ-+-mono {z = embedℚ d} fin)
+      in
+        ≤ℝ-trans high (≤ℝ-trans embq step)
+  in
+    ≤ℝ-of-slack (expq (p + h) 0≤p+h)
+      (expq p 0≤p +ℝ embedℚ H) body
+
+------------------------------------------------------------------------
+-- A rational shift moves the exponential by a controlled amount
+--
+-- 有理平移使指数只移动受控的量
+
+-- `expq-lip` records the one-sided increment at a rational base. Adding a
+-- slack `e` upgrades the weak comparison to the strict `Close` shape, and
+-- monotonicity of `expq` supplies the opposite side.
+--
+-- `expq-lip` 记录有理底处的单侧增量。加上松弛 `e` 把弱比较升级为严格 `Close`
+-- 形状，`expq` 的单调性给出另一侧。
+expq-close : (p h : ℚ) (0≤p : 0ℚ ≤ p) (0≤h : 0ℚ ≤ h) (B : ℚ)
+             (bnd : (j : ℕ) → expPartial (p + h) j ≤ B)
+             (e : ℚ) (0<e : 0ℚ < e)
+           → Close (h * (1ℚ + B) + e) (expq p 0≤p)
+                   (expq (p + h) (≤-trans 0≤p (le-add-right p h 0≤h)))
+expq-close p h 0≤p 0≤h B bnd e 0<e =
+  let
+    0≤ph : 0ℚ ≤ p + h
+    0≤ph = ≤-trans 0≤p (le-add-right p h 0≤h)
+
+    S : ℚ
+    S = h * (1ℚ + B)
+
+    d : ℚ
+    d = S + e
+
+    X : RealI
+    X = expq p 0≤p
+
+    Y : RealI
+    Y = expq (p + h) 0≤ph
+
+    lip : Y ≤ℝ X +ℝ embedℚ S
+    lip = expq-lip p h 0≤p 0≤h 0≤ph B bnd
+
+    mono : X ≤ℝ Y
+    mono = expq-mono p (p + h) 0≤p (le-add-right p h 0≤h)
+
+    0≤B : 0ℚ ≤ B
+    0≤B = subst (λ t → t ≤ B) (sym (expPartial-zero (p + h))) (bnd zero)
+
+    0≤1+B : 0ℚ ≤ 1ℚ + B
+    0≤1+B = ≤-trans 0≤1 (le-add-right 1ℚ B 0≤B)
+
+    0≤S : 0ℚ ≤ S
+    0≤S = prod-nonNeg h (1ℚ + B) 0≤h 0≤1+B
+
+    S<d : S < d
+    S<d = x<x+ S {e} 0<e
+
+    0<d : 0ℚ < d
+    0<d = ≤-<-trans 0≤S S<d
+
+    S<d′ : embedℚ S <ℝ embedℚ d
+    S<d′ = embedℚ-mono S d S<d
+
+    add : embedℚ S +ℝ X <ℝ embedℚ d +ℝ X
+    add = <-+mono (embedℚ S) (embedℚ d) X S<d′
+
+    add′ : X +ℝ embedℚ S <ℝ X +ℝ embedℚ d
+    add′ = ≈-<-respʳ (≈ℝ-sym (+ℝ-comm X (embedℚ d)))
+             (≈-<-resp (≈ℝ-sym (+ℝ-comm X (embedℚ S))) add)
+
+    Y<Xd : Y <ℝ X +ℝ embedℚ d
+    Y<Xd = ≤ℝ-<trans lip add′
+
+    Y<Yd : Y <ℝ Y +ℝ embedℚ d
+    Y<Yd = ≈-<-resp (+ℝ-identityˡ Y)
+             (≈-<-respʳ (+ℝ-comm (embedℚ d) Y)
+               (<-+mono 0ℝ (embedℚ d) Y (0<embedℚ d 0<d)))
+
+    X<Yd : X <ℝ Y +ℝ embedℚ d
+    X<Yd = ≤ℝ-<trans mono Y<Yd
+
+    shift : (X -ℝ embedℚ d) +ℝ embedℚ d <ℝ Y +ℝ embedℚ d
+    shift = ≈-<-resp (≈ℝ-sym (sub-add-cancelℝ X (embedℚ d))) X<Yd
+
+    left : (X -ℝ embedℚ d) <ℝ Y
+    left = <-+mono-reflect {x = Y} {y = X -ℝ embedℚ d} {z = embedℚ d} shift
+  in
+    left , Y<Xd

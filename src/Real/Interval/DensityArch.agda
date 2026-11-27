@@ -15,7 +15,7 @@ open import Data.Rational using
   (ℚ; 0ℚ; 1ℚ; _+_; _-_; _*_; _<_; _>_; _≤_; _≥_; ∣_∣)
 open import Data.Rational.Base using (positive; -_)
 open import Data.Rational.Properties using
-  (≤-trans; ≤-refl; ≤-reflexive; <-≤-trans; ≤-<-trans; +-mono-≤; +-monoˡ-<
+  (≤-trans; ≤-refl; ≤-reflexive; <-≤-trans; ≤-<-trans; <-trans; +-mono-≤; +-monoˡ-<
   ; +-assoc; +-identityˡ; +-identityʳ; +-inverseˡ; *-assoc; *-identityˡ
   ; *-identityʳ; *-comm; *-distribˡ-+; *-distribʳ-+; pos⇒nonNeg; 0≤∣p∣
   ; neg-antimono-≤; neg-distribˡ-*; +-comm; +-inverseʳ; *-monoˡ-<-pos
@@ -26,13 +26,16 @@ open ≡-Reasoning
 
 open import Real using (embed; half; embed-+-hom)
 open import Base.RationalRing using (neg-involutive)
-open import Real.Interval using (RealI; embedℚ; δ; sub-cancel)
+open import Real.Interval using (RealI; embedℚ; δ; δ-pos; sub-cancel)
+open import Real.Interval.Arith using (_+ℝ_)
 open import Real.IntervalEquiv using (l; u; width; bound-w; l-mono; u-mono)
-open import Real.Interval.Node using (l-dyadic; u-dyadic)
-open import Real.Interval.Kit using (0<half; half+half≡1; add-self; 2ℚ*half≡1)
+open import Real.Interval.Node using (l-dyadic; u-dyadic; u-hom)
+open import Real.Interval.Kit using
+  (0<half; half+half≡1; add-self; 2ℚ*half≡1; two-half)
 open import Real.Interval.Order using (_<ℝ_)
-open import Real.Interval.OrderLaws using (width-below-strict)
-open import Real.Interval.Rational using (r≤|r|; pos-diff; cancel-plus)
+open import Real.Interval.OrderLaws using (width-below-strict; halved-tolerance-pos)
+open import Real.Interval.OrderComplete.Base using (_≤ℝ_)
+open import Real.Interval.Rational using (r≤|r|; pos-diff; plus-diff; cancel-plus)
 open import Real.Interval.Reasoning using (begin≤_; _≤∎; _≈⟨_⟩_; _≤⟨_⟩_; _<⟨_⟩≤[_])
 
 ------------------------------------------------------------------------
@@ -74,12 +77,11 @@ embed-suc-half N = begin
 ------------------------------------------------------------------------
 -- The Archimedean property
 --
+-- 阿基米德性
+
 -- Every real is bounded above by the embedding of a natural number.
 --
--- 阿基米德性
---
 -- 每个实数都被某个自然数的嵌入上界。
-
 archimedean : (x : RealI) → Σ ℕ (λ n → x <ℝ embedℚ (embed n))
 archimedean x = n , (0 , goal)
   where
@@ -153,28 +155,24 @@ archimedean x = n , (0 , goal)
 ------------------------------------------------------------------------
 -- Density of the rationals
 --
+-- 有理数稠密性
+
+-- Width of the zero embedding at level m
 -- Between any two distinct reals there is a rational. At the
--- separating level k with u x k < l y k, let d = l y k − u x k.
+-- separating level k with u x k < l y k, let d = l y k − u x k
 -- Choose a deeper level m ≥ k with width 0ℝ m < d, i.e.
--- δ m + δ m < d. Take the midpoint q = (u x m + l y m) * half.
+-- δ m + δ m < d. Take the midpoint q = (u x m + l y m) * half
 -- Since u x m ≤ u x k and l y m ≥ l y k, the gap
 -- d_m = l y m − u x m satisfies d_m ≥ d, so
---
 --   q − u x m = d_m * half ≥ d * half > δ m,
 --   l y m − q = d_m * half ≥ d * half > δ m,
---
 -- hence u x m < q − δ m = l (embedℚ q) m and
 --       u (embedℚ q) m = q + δ m < l y m.
 --
--- 有理数稠密性
---
--- 任意两个不同实数之间存在有理数。在分离层级 k 处令间隙为 d。
+-- 零的嵌入在第 m 层的宽度
+-- 任意两个不同实数之间存在有理数。在分离层级 k 处令间隙为 d
 -- 取更深层级 m，使零嵌入在该层的宽度低于 d。取中点 q，间隙
 -- 在两侧都保持住，从而 q 的嵌入区间把 x 与 y 分离。
-
--- Width of the zero embedding at level m.
---
--- 零的嵌入在第 m 层的宽度。
 width-0ℝ : ∀ m → width (embedℚ 0ℚ) m ≡ δ m + δ m
 width-0ℝ m = begin
   width (embedℚ 0ℚ) m
@@ -440,3 +438,86 @@ dense {x} {y} (k , uxk<lyk) = q , ((m , x<q) , (m , q<y))
   q<y =
     subst (λ z → z < lym) (sym (u-dyadic q m))
       (subst (λ z → z < lym) (+-comm q (δ m)) raw2)
+
+------------------------------------------------------------------------
+-- A real bound from arbitrarily small slack
+--
+-- 由任意小余量得到的实数界
+
+-- If x stays below y plus every positive rational, then x is below y.
+--
+-- 若 x 对每个正有理数都落在 y 加该数之下，则 x 落在 y 之下。
+≤ℝ-of-slack : (x y : RealI)
+             → ((e : ℚ) → 0ℚ < e → x ≤ℝ y +ℝ embedℚ e)
+             → x ≤ℝ y
+≤ℝ-of-slack x y slack = λ y<x →
+  let
+    k : ℕ
+    k = proj₁ y<x
+
+    uyk<lxk : u y k < l x k
+    uyk<lxk = proj₂ y<x
+
+    g : ℚ
+    g = l x k - u y k
+
+    0<g : 0ℚ < g
+    0<g = pos-diff (u y k) (l x k) uyk<lxk
+
+    gh : ℚ
+    gh = g * half
+
+    0<gh : 0ℚ < gh
+    0<gh = halved-tolerance-pos g 0<g
+
+    sel : Σ ℕ (λ m → (k ≤N m) × width (embedℚ 0ℚ) m < gh)
+    sel = width-below-strict (embedℚ 0ℚ) gh k 0<gh
+
+    m : ℕ
+    m = proj₁ sel
+
+    k≤m : k ≤N m
+    k≤m = proj₁ (proj₂ sel)
+
+    width<gh : width (embedℚ 0ℚ) m < gh
+    width<gh = proj₂ (proj₂ sel)
+
+    2δ<gh : δ m + δ m < gh
+    2δ<gh = subst (λ z → z < gh) (width-0ℝ m) width<gh
+
+    δ<2δ : δ m < δ m + δ m
+    δ<2δ = subst (λ z → z < δ m + δ m) (+-identityʳ (δ m))
+             (+-monoʳ-< (δ m) (δ-pos m))
+
+    δ<gh : δ m < gh
+    δ<gh = <-trans δ<2δ 2δ<gh
+
+    δ+e<g : δ m + gh < g
+    δ+e<g = subst (λ z → δ m + gh < z) (two-half g)
+              (+-monoˡ-< gh δ<gh)
+
+    mono-u : u y m + (δ m + gh) ≤ u y k + (δ m + gh)
+    mono-u = +-mono-≤ (u-mono y {n = k} {m = m} k≤m) (≤-refl {δ m + gh})
+
+    cross : u y k + (δ m + gh) < u y k + g
+    cross = +-monoʳ-< (u y k) δ+e<g
+
+    close-g : u y k + g ≡ l x k
+    close-g = plus-diff (u y k) (l x k)
+
+    uy+<lxk : u y m + (δ m + gh) < l x k
+    uy+<lxk = ≤-<-trans mono-u (subst (λ z → u y k + (δ m + gh) < z) close-g cross)
+
+    lxk≤lxm : l x k ≤ l x m
+    lxk≤lxm = l-mono x {n = k} {m = m} k≤m
+
+    uy+<lxm : u y m + (δ m + gh) < l x m
+    uy+<lxm = <-≤-trans uy+<lxk lxk≤lxm
+
+    endpoint : u (y +ℝ embedℚ gh) m ≡ u y m + (δ m + gh)
+    endpoint = trans (u-hom y (embedℚ gh) m)
+                    (cong (u y m +_) (u-dyadic gh m))
+
+    below : u (y +ℝ embedℚ gh) m < l x m
+    below = subst (λ z → z < l x m) (sym endpoint) uy+<lxm
+  in slack gh 0<gh (m , below)

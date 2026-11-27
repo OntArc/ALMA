@@ -8,40 +8,40 @@
 
 module Real.Interval.Exp.Step where
 
-open import Data.Nat as Nat using (ℕ; zero; suc; z≤n; s≤s; _^_; _⊔_)
+open import Data.Nat as Nat using (ℕ; zero; suc; z≤n; s≤s; _⊔_)
   renaming (_+_ to _+ℕ_)
 import Data.Nat.Properties as NatP
-open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
 open import Data.Rational using
   (ℚ; 0ℚ; 1ℚ; NonZero; _≤_; _<_; _+_; _-_; _*_; ∣_∣) renaming (-_ to neg)
 open import Data.Rational.Base using (_÷_; 1/_; positive)
 open import Data.Rational.Properties using
   (≤-refl; ≤-trans; <⇒≤; <-≤-trans; <-asym; +-mono-≤; +-monoˡ-<; +-identityˡ
   ; +-identityʳ; +-inverseˡ; +-inverseʳ; +-assoc; +-monoˡ-≤; +-monoʳ-≤; +-monoʳ-<
-  ; neg-antimono-≤; neg-distrib-+; 1/pos⇒pos; pos⇒nonZero; positive⁻¹; +-mono-<
-  ; ≤-<-trans; +-comm; *-identityʳ; *-assoc; *-distribˡ-+; *-inverseˡ
-  ; pos*pos⇒pos; *-monoˡ-<-pos; ∣-p∣≡∣p∣; 0≤p⇒∣p∣≡p)
+  ; neg-antimono-≤; neg-antimono-<; neg-distrib-+; 1/pos⇒pos; pos⇒nonZero
+  ; positive⁻¹; +-mono-<; ≤-<-trans; +-comm; *-identityʳ; *-assoc; *-distribˡ-+
+  ; *-inverseˡ; pos*pos⇒pos; *-monoˡ-<-pos; ∣-p∣≡∣p∣; 0≤p⇒∣p∣≡p)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_; refl; sym; trans; cong; subst; module ≡-Reasoning)
+  (_≡_; refl; sym; trans; cong; subst; subst₂; module ≡-Reasoning)
 open ≡-Reasoning
 
 open import Base.RationalRing using (rotate-sum; 0<1; 0≤1)
 open import Real using (ε; half; embed; embed-mono-≤; 0<ε)
-open import Real.Archimedean using (ε-archimedean)
+open import Real.Archimedean using (ε-archimedean; ε-≤-1; le-add-right)
 open import Real.CauchyToInterval using (M; K; K≥k; μ≤M)
-open import Real.Interval using (RealI)
 open import Real.IntervalEquiv using (l; u; l-mono; u-mono)
-open import Real.Interval using (δ; δ-pos; pos-pow; dyadic)
-open import Real.Interval.ContinuityRecipBasic using (u-cauchy→realI; ε≤1)
+open import Real.Interval using (δ; δ-pos; RealI; embedℚ; dyadic)
+open import Real.Interval.ContinuityRecipBasic using (u-cauchy→realI)
 open import Real.Interval.Exp.Core as ExpCore using
   (term; expPartial; expPartial-cauchy; expSeq; expq; expPartial-nonNeg
   ; expPartial-zero; expPartial-suc; sumQ-mono; _≤ℕ_)
 open import Real.Interval.Exp.Order using (expPartial-two; term-mono)
+open import Real.Interval.Exp.PartialLe using (εK≤δ)
 open import Real.Interval.Exp.Lipschitz using
-  (expPartial-bound; expPartial-param-bnd; le-add-right)
-open import Real.Interval.Kit using (half+half≡1; recip-antitone; 0<half)
+  (expPartial-bound; expPartial-param-bnd)
+open import Real.Interval.Kit using (half+half≡1; 0<half)
 open import Real.Interval.LimitLaws using (ε-mono; abs<⇒upper)
-open import Real.Interval.Node using (l-dyadic)
+open import Real.Interval.Node using (l-dyadic; add2-nonNeg)
 open import Real.Interval.OrderComplete.Base using (_≤ℝ_)
 
 ------------------------------------------------------------------------
@@ -53,6 +53,13 @@ expq-u : (q : ℚ) (0≤q : 0ℚ ≤ q) (k : ℕ)
        → u (expq q 0≤q) k ≡ expPartial q (M (expSeq q 0≤q) k) + δ k
 expq-u q 0≤q k = u-cauchy→realI (expSeq q 0≤q) k
 
+------------------------------------------------------------------------
+-- The modulus anchor of expq p at level k
+--
+-- expq p 在第 k 层的模数锚点
+
+expPartial-anchor : (p : ℚ) (0≤p : 0ℚ ≤ p) (k : ℕ) → ℕ
+expPartial-anchor p 0≤p k = proj₁ (expPartial-cauchy p 0≤p (K k))
 
 ------------------------------------------------------------------------
 -- Any index beyond the modulus at level K k sits within ε (K k) of the sampled value
@@ -60,7 +67,7 @@ expq-u q 0≤q k = u-cauchy→realI (expSeq q 0≤q) k
 -- 超过 K k 层模数的任何下标都落在采样值的一个 ε (K k) 之内
 
 expPartial-cauchy-upper : (p : ℚ) (0≤p : 0ℚ ≤ p) (k : ℕ) (n : ℕ)
-                        → proj₁ (expPartial-cauchy p 0≤p (K k)) ≤ℕ n
+                        → expPartial-anchor p 0≤p k ≤ℕ n
                         → expPartial p n ≤ expPartial p (M (expSeq p 0≤p) k) + ε (K k)
 expPartial-cauchy-upper p 0≤p k n N≤n =
   <⇒≤ (abs<⇒upper {a = expPartial p (M (expSeq p 0≤p) k)}
@@ -75,7 +82,7 @@ expPartial-cauchy-upper p 0≤p k n N≤n =
 -- 用另一参数的采样下标给锚点补位，模数假设就无条件成立
 
 anchor-ge : (r p : ℚ) (0≤r : 0ℚ ≤ r) (0≤p : 0ℚ ≤ p) (k : ℕ)
-          → proj₁ (expPartial-cauchy p 0≤p (K k))
+          → expPartial-anchor p 0≤p k
             ≤ℕ (M (expSeq p 0≤p) k ⊔ M (expSeq r 0≤r) k)
 anchor-ge r p 0≤r 0≤p k =
   NatP.≤-trans (μ≤M (expSeq p 0≤p) k)
@@ -117,7 +124,7 @@ expPartial-of-step : (p : ℚ) (0≤p : 0ℚ ≤ p) (h : ℚ) (0≤h : 0ℚ ≤ 
                    → ∀ n → expPartial (p + h) n ≤ C
 expPartial-of-step p 0≤p h 0≤h h≤1 C Cb n =
   let 0≤ph : 0ℚ ≤ p + h
-      0≤ph = subst (λ z → z ≤ p + h) (+-identityˡ 0ℚ) (+-mono-≤ 0≤p 0≤h)
+      0≤ph = add2-nonNeg 0≤p 0≤h
       ph≤p1 : p + h ≤ p + 1ℚ
       ph≤p1 = +-mono-≤ (≤-refl {p}) h≤1
   in ≤-trans (sumQ-mono (λ i → term (p + h) i) (λ i → term (p + 1ℚ) i)
@@ -176,18 +183,133 @@ cancel-gap v w = begin
   w                ∎
 
 ------------------------------------------------------------------------
+-- Index augmentation for the step witness
+--
+-- 步进见证的下标补位
+
+-- Padding the level index by the peak of the two archimedean witnesses keeps k₀ below it
+-- The first witness stays below K of that peak.
+--
+-- 用两个阿基米德见证的较大者给层下标补位
+-- k₀ 仍在它之下，第一个见证仍在它取 K 之后的下标之下。
+expq-step-index : (m₁ m₂ k₀ : ℕ)
+                → k₀ ≤ℕ (m₁ ⊔ m₂) +ℕ k₀
+                  × (m₁ ≤ℕ K ((m₁ ⊔ m₂) +ℕ k₀))
+expq-step-index m₁ m₂ k₀ =
+  ( subst (λ z → k₀ ≤ℕ z) (NatP.+-comm k₀ (m₁ ⊔ m₂))
+           (NatP.m≤m+n k₀ (m₁ ⊔ m₂))
+  , NatP.≤-trans
+      (NatP.≤-trans (NatP.m≤m⊔n m₁ m₂) (NatP.m≤m+n (m₁ ⊔ m₂) k₀))
+      (K≥k ((m₁ ⊔ m₂) +ℕ k₀)) )
+
+------------------------------------------------------------------------
+-- The upper bound reached from below
+--
+-- 从下方逼近所得的上界
+
+-- A chain of monotone estimates puts the level-k₂ upper endpoint of expq (p + h) below the composite bound T.
+--
+-- 一串单调估计把 expq (p + h) 在第 k₂ 层的上端点压到复合界 T 之下。
+expq-step-ceiling :
+    (p : ℚ) (0≤p : 0ℚ ≤ p) (h : ℚ) (0≤h : 0ℚ ≤ h) (h≤1 : h ≤ 1ℚ)
+    (C : ℚ) (Cb : ∀ n → expPartial (p + 1ℚ) n ≤ C)
+    (0≤ph : 0ℚ ≤ p + h) (k₂ : ℕ) (A : ℕ)
+    (Mr≤A : M (expSeq (p + h) 0≤ph) k₂ ≤ℕ A)
+    (N≤A : expPartial-anchor p 0≤p k₂ ≤ℕ A)
+  → u (expq (p + h) 0≤ph) k₂
+    ≤ ((expPartial p (M (expSeq p 0≤p) k₂) + ε (K k₂)) + h * (1ℚ + C)) + δ k₂
+expq-step-ceiling p 0≤p h 0≤h h≤1 C Cb 0≤ph k₂ A Mr≤A N≤A =
+  let Mpr = M (expSeq p 0≤p) k₂
+      Mr = M (expSeq (p + h) 0≤ph) k₂
+      T = ((expPartial p Mpr + ε (K k₂)) + h * (1ℚ + C)) + δ k₂
+      s1 : expPartial (p + h) Mr ≤ expPartial (p + h) A
+      s1 = ExpCore.expPartial-le (p + h) 0≤ph Mr A Mr≤A
+      s2 : expPartial (p + h) A ≤ expPartial p A + h * (1ℚ + C)
+      s2 = expPartial-param-bnd p h 0≤p 0≤h A C
+             (expPartial-of-step p 0≤p h 0≤h h≤1 C Cb)
+      s3 : expPartial p A ≤ expPartial p Mpr + ε (K k₂)
+      s3 = expPartial-cauchy-upper p 0≤p k₂ A N≤A
+      c1 : expPartial (p + h) Mr + δ k₂ ≤ expPartial (p + h) A + δ k₂
+      c1 = +-monoˡ-≤ (δ k₂) s1
+      c2 : expPartial (p + h) A + δ k₂
+         ≤ (expPartial p A + h * (1ℚ + C)) + δ k₂
+      c2 = +-monoˡ-≤ (δ k₂) s2
+      c3 : (expPartial p A + h * (1ℚ + C)) + δ k₂ ≤ T
+      c3 = +-monoˡ-≤ (δ k₂) (+-monoˡ-≤ (h * (1ℚ + C)) s3)
+      cAll : expPartial (p + h) Mr + δ k₂ ≤ T
+      cAll = ≤-trans c1 (≤-trans c2 c3)
+  in subst (λ z → z ≤ T) (sym (expq-u (p + h) 0≤ph k₂)) cAll
+
+------------------------------------------------------------------------
+-- The upper bound stays below the interval's lower endpoint
+--
+-- 该上界仍低于区间下端点
+
+-- Rotating the composite bound and padding it by the gap puts it strictly below l y k₂.
+--
+-- 把复合界重排并在间隙上补位，使其严格低于 l y k₂。
+expq-step-floor :
+    (p : ℚ) (0≤p : 0ℚ ≤ p) (y : RealI) (k₀ k₂ : ℕ) (h C : ℚ)
+    (k₀≤k₂ : k₀ ≤ℕ k₂)
+    (slack : ε (K k₂) + h * (1ℚ + C) < l y k₀ + neg (u (expq p 0≤p) k₀))
+  → ((expPartial p (M (expSeq p 0≤p) k₂) + ε (K k₂)) + h * (1ℚ + C)) + δ k₂ < l y k₂
+expq-step-floor p 0≤p y k₀ k₂ h C k₀≤k₂ slack =
+  let Mpr = M (expSeq p 0≤p) k₂
+      T = ((expPartial p Mpr + ε (K k₂)) + h * (1ℚ + C)) + δ k₂
+      up = u (expq p 0≤p) k₂
+      g₂ = l y k₂ + neg up
+      rot : T ≡ (expPartial p Mpr + δ k₂) + (ε (K k₂) + h * (1ℚ + C))
+      rot = rotate-sum (expPartial p Mpr) (ε (K k₂)) (h * (1ℚ + C)) (δ k₂)
+      up-slack : up + (ε (K k₂) + h * (1ℚ + C)) < up + g₂
+      up-slack = <-≤-trans (+-monoʳ-< up slack)
+                           (+-monoʳ-≤ up (gap-mono p 0≤p y k₀≤k₂))
+      up-lt : (expPartial p Mpr + δ k₂) + (ε (K k₂) + h * (1ℚ + C)) < up + g₂
+      up-lt = subst (λ z → z + (ε (K k₂) + h * (1ℚ + C)) < up + g₂)
+                (expq-u p 0≤p k₂) up-slack
+  in subst (λ z → T < z) (cancel-gap up (l y k₂))
+       (subst (λ z → z < up + g₂) (sym rot) up-lt)
+
+------------------------------------------------------------------------
 -- The gap yields a small parameter step that keeps expq below y
 --
 -- 间隙给出使 expq 仍低于 y 的小参数步长
 
+-- The chain reads
+--   u (expq (p+h)) k₂ = expPartial (p+h) M_r + δ
 --   ≤ expPartial (p+h) A + δ                                    [A = M_p ⊔ M_r]
+--   ≤ expPartial p A + h * (1 + C) + δ                          [Lipschitz in the parameter]
+--   ≤ expPartial p M_p + ε (K k₂) + h * (1 + C) + δ             [Cauchy comparison, A ≥ μ_p (K k₂)]
 --   = u (expq p) k₂ + (ε (K k₂) + h * (1 + C))
 --   < u (expq p) k₂ + g₀ ≤ u (expq p) k₂ + g₂ = l y k₂
+-- For the level bound (★) it is enough to know
+--   u (expq q) k = expPartial q (M k) + δ k
+--   l (dyadic (1+q) 0) k = neg (δ k) + (1 + q)
+--   1 + q ≤ expPartial q (M k) + (δ k + δ k)                     (★)
+-- This is what Log/Core needs for its upper bound: log only rises to
+-- infinity because expq grows at least linearly. The level bound (★) comes
+-- from a case split on M k, and each case uses ε (K k) ≤ δ k, that is
+-- ε (K k) = 1/embed (1 + K k) and δ k = 1/embed (2 ^ suc k) with
+-- 2 ^ suc k ≤ K k ≤ suc (K k) after taking reciprocals.
 --
--- 间隙给出一个小的参数位移，使 expq (p + h) 仍在 y 之下，链条为：
---   u (expq (p+h)) k₂ = expPartial (p+h) M_r + δ
---   ≤ expPartial p A + h * (1 + C) + δ                          [参数方向 Lipschitz]
+-- 间隙给出一个小的参数位移，使 expq (p + h) 仍在 y 之下，链条为
+--   起点 u (expq (p+h)) k₂ = expPartial (p+h) M_r + δ            [展开 u]
+--   ≤ expPartial (p+h) A + δ                                    [取 A = M_p ⊔ M_r]
+--   ≤ expPartial p A + h * (1 + C) + δ                          [参数方向的 Lipschitz]
 --   ≤ expPartial p M_p + ε (K k₂) + h * (1 + C) + δ             [A ≥ μ_p (K k₂) 的柯西比较]
+--   = u (expq p) k₂ + (ε (K k₂) + h * (1 + C))                   [按 u 的定义]
+--   < u (expq p) k₂ + g₀ ≤ u (expq p) k₂ + g₂ = l y k₂。         [间隙与端点展开]
+-- 对层界 (★) 只需知道三条
+--   u (expq q) k = expPartial q (M k) + δ k                      [u 的定义]
+--   l (dyadic (1+q) 0) k = neg (δ k) + (1 + q)                   [l 的定义]
+--   1 + q ≤ expPartial q (M k) + (δ k + δ k)                     [层界]
+-- 这是 Log/Core 的上界所需：log 之所以趋于无穷，正因为 expq 至少线性增长
+-- dyadic (1 + q) 0 ≤ℝ expq q 即 expq q 不可能小于 dyadic (1 + q) 0；取见证
+-- 层 k，把 expq 的上端点与 dyadic 的下端点都用公式展开后，(★) 归结为对
+-- M k 分三种情形：M = 0、M = 1 由柯西性分别给出 1+q < ε (K k) 与
+-- q < ε (K k)，M ≥ 2 由 expPartial-two 与下标单调性给出
+-- 1+q ≤ expPartial q (M k)；三种情形都用 ε (K k) ≤ δ k，其中
+-- ε (K k) = 1/embed (1 + K k)，δ k = 1/embed (2 ^ suc k)，而
+-- 2 ^ suc k ≤ K k ≤ suc (K k)，取倒数即得。
 expq-step-up : (p : ℚ) (0≤p : 0ℚ ≤ p) (y : RealI) (k₀ : ℕ)
              → u (expq p 0≤p) k₀ < l y k₀
              → Σ ℚ (λ h → Σ (0ℚ < h) (λ _ → Σ (0ℚ ≤ p + h)
@@ -198,7 +320,7 @@ expq-step-up p 0≤p y k₀ gap =
       0<g₀ = gap-pos p 0≤p y k₀ gap
       p1 = p + 1ℚ
       0≤p1 : 0ℚ ≤ p1
-      0≤p1 = subst (λ z → z ≤ p1) (+-identityˡ 0ℚ) (+-mono-≤ 0≤p 0≤1)
+      0≤p1 = add2-nonNeg 0≤p 0≤1
       w = expPartial-bound p1 0≤p1 (ε zero) (0<ε zero)
       C = proj₁ w
       Cb = proj₂ w
@@ -226,15 +348,13 @@ expq-step-up p 0≤p y k₀ gap =
       0≤h : 0ℚ ≤ h
       0≤h = <⇒≤ (0<ε m₂)
       h≤1 : h ≤ 1ℚ
-      h≤1 = ε≤1 m₂
+      h≤1 = ε-≤-1 m₂
       k₂ = (m₁ ⊔ m₂) +ℕ k₀
+      idx = expq-step-index m₁ m₂ k₀
       k₀≤k₂ : k₀ ≤ℕ k₂
-      k₀≤k₂ = subst (λ z → k₀ ≤ℕ z) (NatP.+-comm k₀ (m₁ ⊔ m₂))
-                (NatP.m≤m+n k₀ (m₁ ⊔ m₂))
+      k₀≤k₂ = proj₁ idx
       m₁≤Kk₂ : m₁ ≤ℕ K k₂
-      m₁≤Kk₂ = NatP.≤-trans
-                 (NatP.≤-trans (NatP.m≤m⊔n m₁ m₂) (NatP.m≤m+n (m₁ ⊔ m₂) k₀))
-                 (K≥k k₂)
+      m₁≤Kk₂ = proj₂ idx
       εK<t₁ : ε (K k₂) < t₁
       εK<t₁ = ≤-<-trans (ε-mono {m₁} {K k₂} m₁≤Kk₂) (proj₂ a₁)
       hC<t₁ : h * (1ℚ + C) < t₁
@@ -242,85 +362,18 @@ expq-step-up p 0≤p y k₀ gap =
       slack : ε (K k₂) + h * (1ℚ + C) < g₀
       slack = slack-lt (ε (K k₂)) (h * (1ℚ + C)) g₀ εK<t₁ hC<t₁
       0≤ph : 0ℚ ≤ p + h
-      0≤ph = subst (λ z → z ≤ p + h) (+-identityˡ 0ℚ) (+-mono-≤ 0≤p 0≤h)
+      0≤ph = add2-nonNeg 0≤p 0≤h
       Mpr = M (expSeq p 0≤p) k₂
       Mr = M (expSeq (p + h) 0≤ph) k₂
       A = Mpr ⊔ Mr
-      up = u (expq p 0≤p) k₂
-      g₂ = l y k₂ + neg up
       Mr≤A : Mr ≤ℕ A
       Mr≤A = NatP.m≤n⊔m Mpr Mr
-      s1 : expPartial (p + h) Mr ≤ expPartial (p + h) A
-      s1 = ExpCore.expPartial-le (p + h) 0≤ph Mr A Mr≤A
-      s2 : expPartial (p + h) A ≤ expPartial p A + h * (1ℚ + C)
-      s2 = expPartial-param-bnd p h 0≤p 0≤h A C
-             (expPartial-of-step p 0≤p h 0≤h h≤1 C Cb)
-      N≤A : proj₁ (expPartial-cauchy p 0≤p (K k₂)) ≤ℕ A
+      N≤A : expPartial-anchor p 0≤p k₂ ≤ℕ A
       N≤A = anchor-ge (p + h) p 0≤ph 0≤p k₂
-      s3 : expPartial p A ≤ expPartial p Mpr + ε (K k₂)
-      s3 = expPartial-cauchy-upper p 0≤p k₂ A N≤A
-      T = ((expPartial p Mpr + ε (K k₂)) + h * (1ℚ + C)) + δ k₂
-      c1 : expPartial (p + h) Mr + δ k₂ ≤ expPartial (p + h) A + δ k₂
-      c1 = +-monoˡ-≤ (δ k₂) s1
-      c2 : expPartial (p + h) A + δ k₂
-         ≤ (expPartial p A + h * (1ℚ + C)) + δ k₂
-      c2 = +-monoˡ-≤ (δ k₂) s2
-      c3 : (expPartial p A + h * (1ℚ + C)) + δ k₂ ≤ T
-      c3 = +-monoˡ-≤ (δ k₂) (+-monoˡ-≤ (h * (1ℚ + C)) s3)
-      uR = expq-u (p + h) 0≤ph k₂
-      uP = expq-u p 0≤p k₂
-      cAll : expPartial (p + h) Mr + δ k₂ ≤ T
-      cAll = ≤-trans c1 (≤-trans c2 c3)
-      FINAL1 : u (expq (p + h) 0≤ph) k₂ ≤ T
-      FINAL1 = subst (λ z → z ≤ T) (sym uR) cAll
-      rot : T ≡ (expPartial p Mpr + δ k₂) + (ε (K k₂) + h * (1ℚ + C))
-      rot = rotate-sum (expPartial p Mpr) (ε (K k₂)) (h * (1ℚ + C)) (δ k₂)
-      up-slack : up + (ε (K k₂) + h * (1ℚ + C)) < up + g₂
-      up-slack = <-≤-trans (+-monoʳ-< up slack)
-                           (+-monoʳ-≤ up (gap-mono p 0≤p y k₀≤k₂))
-      up-lt : (expPartial p Mpr + δ k₂) + (ε (K k₂) + h * (1ℚ + C)) < up + g₂
-      up-lt = subst (λ z → z + (ε (K k₂) + h * (1ℚ + C)) < up + g₂)
-                uP up-slack
-      FINAL0 : T < up + g₂
-      FINAL0 = subst (λ z → z < up + g₂) (sym rot) up-lt
-      uproof : u (expq (p + h) 0≤ph) k₂ < l y k₂
-      uproof = subst (λ z → u (expq (p + h) 0≤ph) k₂ < z)
-                 (cancel-gap up (l y k₂)) (≤-<-trans FINAL1 FINAL0)
-  in h , 0<ε m₂ , 0≤ph , (k₂ , uproof)
-
-------------------------------------------------------------------------
--- Linear growth of expq
---
--- 线性增长：expq 的下界
-
---   u (expq q) k = expPartial q (M k) + δ k
---   l (dyadic (1+q) 0) k = neg (δ k) + (1 + q)
---   1 + q ≤ expPartial q (M k) + (δ k + δ k)                     (★)
--- This is what Log/Core needs for its upper bound: log only rises to
--- infinity because expq grows at least linearly. The level bound (★) comes
--- from a case split on M k, and each case uses ε (K k) ≤ δ k, that is
--- ε (K k) = 1/embed (1 + K k) and δ k = 1/embed (2 ^ suc k) with
--- 2 ^ suc k ≤ K k ≤ suc (K k) after taking reciprocals.
---
---   u (expq q) k = expPartial q (M k) + δ k
---   l (dyadic (1+q) 0) k = neg (δ k) + (1 + q)
---   1 + q ≤ expPartial q (M k) + (δ k + δ k)                     (★)
--- 这是 Log/Core 的上界所需：log 之所以趋于无穷，正因为 expq 至少线性增长。
--- dyadic (1 + q) 0 ≤ℝ expq q 即 expq q 不可能小于 dyadic (1 + q) 0；取见证
--- 层 k，把 expq 的上端点与 dyadic 的下端点都用公式展开后，(★) 归结为对
--- M k 分三种情形：M = 0、M = 1 由柯西性分别给出 1+q < ε (K k) 与
--- q < ε (K k)，M ≥ 2 由 expPartial-two 与下标单调性给出
--- 1+q ≤ expPartial q (M k)；三种情形都用 ε (K k) ≤ δ k，其中
--- ε (K k) = 1/embed (1 + K k)，δ k = 1/embed (2 ^ suc k)，而
--- 2 ^ suc k ≤ K k ≤ suc (K k)，取倒数即得。
-ε-K≤δ : (k : ℕ) → ε (K k) ≤ δ k
-ε-K≤δ k =
-  let le : 2 ^ suc k ≤ℕ suc (K k)
-      le = NatP.≤-trans (NatP.m≤n*m (2 ^ suc k) 2)
-             (NatP.m≤n⇒m≤1+n {m = K k} {n = K k} NatP.≤-refl)
-      0<a : 0ℚ < embed (2 ^ suc k)
-      0<a = positive⁻¹ (embed (2 ^ suc k)) {{pos-pow k}}
-  in recip-antitone 0<a (embed-mono-≤ le)
+  in h , 0<ε m₂ , 0≤ph ,
+     (k₂ , ≤-<-trans
+             (expq-step-ceiling p 0≤p h 0≤h h≤1 C Cb 0≤ph k₂ A Mr≤A N≤A)
+             (expq-step-floor p 0≤p y k₀ k₂ h C k₀≤k₂ slack))
 
 ------------------------------------------------------------------------
 -- Two absolute-value identities
@@ -396,9 +449,9 @@ neg-cancel x y = begin
     (+-mono-≤ (0≤δ k) (0≤δ k))
 
 ------------------------------------------------------------------------
--- (★) keeping the value of M apart from its bound
+-- keeping the value of M apart from its bound
 --
--- (★) 主引理：M 的取值与其界分离
+-- M 的取值与其界分离
 
 expPartial-suc-zero : (q : ℚ) → expPartial q (suc zero) ≡ 1ℚ
 expPartial-suc-zero q = begin
@@ -407,15 +460,6 @@ expPartial-suc-zero q = begin
   0ℚ + term q zero                 ≡⟨ +-identityˡ (term q zero) ⟩
   term q zero                      ∎
 
--- Abstracting over M (expSeq q 0≤q) k copies the expSeq record literal
--- (and the expPartial-cauchy term inside it) into every branch, which
--- --double-check then re-expands repeatedly; this blew up memory. So the
--- value m and the bound N ≤ m are passed separately and the case split
--- runs on a plain natural number.
---
--- 直接对 M (expSeq q 0≤q) k 做 with 抽象，会把 expSeq 记录字面量连同其中的
--- expPartial-cauchy 项复制进每个分支；--double-check 重检这些分支时反复
--- 展开，实测内存失控。故此处把取值 m 与它的柯西模界 N ≤ m 分开传入。
 partial-lower : (q : ℚ) (0≤q : 0ℚ ≤ q) (k N : ℕ) (m : ℕ)
               → N ≡ proj₁ (expPartial-cauchy q 0≤q (K k))
               → N ≤ℕ m
@@ -434,7 +478,7 @@ partial-lower q 0≤q k N zero refl N≤0 =
       s3 : 1ℚ + q < ε (K k)
       s3 = subst (λ z → z < ε (K k)) (abs-zero q 0≤q) s2
       s4 : 1ℚ + q < δ k
-      s4 = <-≤-trans s3 (ε-K≤δ k)
+      s4 = <-≤-trans s3 (εK≤δ k)
       le : 1ℚ + q ≤ δ k + δ k
       le = ≤-trans (<⇒≤ s4) (δ≤δ+δ k)
       le' : 1ℚ + q ≤ 0ℚ + (δ k + δ k)
@@ -455,7 +499,7 @@ partial-lower q 0≤q k N (suc zero) refl N≤1 =
       s3 : q < ε (K k)
       s3 = subst (λ z → z < ε (K k)) (abs-one q 0≤q) s2
       s4 : q < δ k
-      s4 = <-≤-trans s3 (ε-K≤δ k)
+      s4 = <-≤-trans s3 (εK≤δ k)
       le : 1ℚ + q ≤ 1ℚ + (δ k + δ k)
       le = +-mono-≤ (≤-refl {1ℚ}) (≤-trans (<⇒≤ s4) (δ≤δ+δ k))
   in subst (λ z → 1ℚ + q ≤ z + (δ k + δ k)) (sym (expPartial-suc-zero q)) le
@@ -508,3 +552,88 @@ expq-ge-linear q 0≤q (k , hlt) =
       bad : 1ℚ + q < 1ℚ + q
       bad = ≤-<-trans ge h3'
   in <-asym bad bad
+
+----------------------------------------------------------------------
+-- Arithmetic helpers
+--
+-- 算术辅助
+
+neg-δ<0 : (k : ℕ) → neg (δ k) < 0ℚ
+neg-δ<0 k = neg-antimono-< {0ℚ} {δ k} (δ-pos k)
+
+m<1+m : (m : ℚ) → m < 1ℚ + m
+m<1+m m =
+  subst₂ _<_
+    (trans (+-comm m 0ℚ) (+-identityˡ m))
+    (+-comm m 1ℚ)
+    (+-monoʳ-< m 0<1)
+
+m<δ+m : (k : ℕ) (m : ℚ) → m < δ k + m
+m<δ+m k m =
+  subst₂ _<_
+    (+-identityʳ m)
+    (+-comm m (δ k))
+    (+-monoʳ-< m (δ-pos k))
+
+neg-δ+m<m : (k : ℕ) (m : ℚ) → neg (δ k) + m < m
+neg-δ+m<m k m =
+  subst₂ _<_
+    (+-comm m (neg (δ k)))
+    (+-identityʳ m)
+    (+-monoʳ-< m (neg-δ<0 k))
+
+-- (e + (δ + δ)) + neg δ ≡ e + δ.
+--
+-- 三重消去：先结合，再消去 δ + neg δ。
+δ-triple : (e : ℚ) (k : ℕ)
+         → (e + (δ k + δ k)) + neg (δ k) ≡ e + δ k
+δ-triple e k =
+  trans (+-assoc e (δ k + δ k) (neg (δ k)))
+    (trans (cong (e +_) cancel) refl)
+  where
+  cancel : (δ k + δ k) + neg (δ k) ≡ δ k
+  cancel = trans (+-assoc (δ k) (δ k) (neg (δ k)))
+             (trans (cong (δ k +_) (+-inverseʳ (δ k)))
+                    (+-identityʳ (δ k)))
+
+----------------------------------------------------------------------
+-- embedℚ m ≤ expq m: linear growth read at the level of layers
+--
+-- embedℚ m ≤ expq m：逐层的线性增长
+
+embed≤exp : (m : ℚ) (0≤m : 0ℚ ≤ m) → embedℚ m ≤ℝ expq m 0≤m
+embed≤exp m 0≤m (k , h) =
+  let
+    Mk : ℕ
+    Mk = M (expSeq m 0≤m) k
+
+    lower : 1ℚ + m ≤ expPartial m Mk + (δ k + δ k)
+    lower = M-lower m 0≤m k
+
+    add-negδ : (1ℚ + m) + neg (δ k)
+             ≤ (expPartial m Mk + (δ k + δ k)) + neg (δ k)
+    add-negδ = +-monoˡ-≤ (neg (δ k)) lower
+
+    lower' : (1ℚ + m) + neg (δ k) ≤ expPartial m Mk + δ k
+    lower' = subst (λ z → (1ℚ + m) + neg (δ k) ≤ z)
+               (δ-triple (expPartial m Mk) k) add-negδ
+
+    strict : neg (δ k) + m < (1ℚ + m) + neg (δ k)
+    strict = subst (λ z → neg (δ k) + m < z)
+               (+-comm (neg (δ k)) (1ℚ + m))
+               (+-monoʳ-< (neg (δ k)) (m<1+m m))
+
+    gt : neg (δ k) + m < expPartial m Mk + δ k
+    gt = <-≤-trans strict lower'
+
+    uP≡ : u (expq m 0≤m) k ≡ expPartial m Mk + δ k
+    uP≡ = expq-u m 0≤m k
+
+    lE : l (embedℚ m) k ≡ neg (δ k) + m
+    lE = l-dyadic m k
+
+    lt : l (embedℚ m) k < u (expq m 0≤m) k
+    lt = subst (λ z → z < u (expq m 0≤m) k) (sym lE)
+           (subst (λ z → neg (δ k) + m < z) (sym uP≡) gt)
+  in
+    <-asym lt h

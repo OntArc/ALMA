@@ -14,20 +14,22 @@ open import Data.Product using (_,_; proj₁; proj₂)
 open import Data.Sum using (inj₂)
 open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _+_; _-_; _*_; _<_; _≤_; NonZero; Positive; positive)
 open import Data.Rational.Base using (1/_) renaming (-_ to neg)
-open import Data.Rational.Properties using (≤-trans; <⇒≤; ≤-<-trans; <-≤-trans; +-monoˡ-<; +-assoc; +-identityʳ ; +-inverseʳ; *-assoc; *-identityˡ; *-inverseʳ; pos⇒nonZero; pos*pos⇒pos ; ≤-reflexive) renaming (<-trans to <-transQ)
+open import Data.Rational.Properties using (≤-trans; <⇒≤; ≤-<-trans; <-≤-trans; +-monoˡ-<; +-assoc; +-identityʳ ; +-inverseʳ; *-assoc; *-identityˡ; *-inverseʳ; pos⇒nonZero; pos*pos⇒pos ; ≤-reflexive; *-inverseˡ) renaming (<-trans to <-transQ)
 open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst; module ≡-Reasoning)
+open import Relation.Binary.PropositionalEquality using
+  (_≡_; refl; sym; trans; cong; subst; subst₂; module ≡-Reasoning)
 open ≡-Reasoning
 
 open import Real using (CauchySeq; embed; embed-*-hom; embed-mono-<; embed-suc-pos; reciprocal-cong)
 open CauchySeq renaming (f to seq-f)
 open import Real.CauchyToInterval using (cauchy→realI; M; node-go)
 open import Real.IntervalEquiv using (l; u; pp; centre; centre-u; u-mono; bound-w; n<2^n; realI→cauchy; node)
-open import Real.Interval using (RealI; δ; δ-pos)
+open import Real.Interval using (RealI; δ; δ-pos; embedℚ)
 open import Real.Interval.Arith using (0ℝ; 1ℝ; negℝ)
 open import Real.Interval.ArithLaws using (negℝ-0ℝ)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-refl; ≈ℝ-sym; ≈ℝ-trans)
-open import Real.Interval.Embed using (0ℝ<ℝ1ℝ)
+open import Real.Interval.Embed using (0ℝ<ℝ1ℝ; embedℚ-*; embedℚ-cong)
+open import Real.Interval.Continuity using (0<embedℚ)
 open import Real.Interval.Inverse using (*ℝ-inverse-pos)
 open import Real.Interval.Kit using (add-self; recip-antitone; strict-recip)
 open import Real.Interval.Mul using (_*ℝ_)
@@ -71,7 +73,7 @@ add-cancel-< {a} {b} {c} s =
 -- 保号性：0 < recipℝ x
 
 -- The reciprocal Cauchy sequence has terms h k = 1 / g k, with g k
--- bounded above by U = u x 0 and below by b > 0. Hence h k ≥ 1 / U.
+-- bounded above by U = u x 0 and below by b > 0. Hence h k ≥ 1 / U
 -- Choosing n with 2 · δ n < 1 / U gives h (M cs n) - δ n > δ n.
 --
 -- 倒数 Cauchy 序列的项以某个正有理数为下界、以上界 U 为上界，
@@ -237,10 +239,7 @@ module RecipPosAux (x : RealI) (0<x : 0ℝ <ℝ x) where
                 (<-≤-trans 2δ< hn≥))
 
   goal : u 0ℝ n < l (cauchy→realI cs) n
-  goal =
-    subst (λ z → z < l (cauchy→realI cs) n)
-          (sym (u-dyadic-0 n))
-          (subst (λ z → δ n < z) (sym lR≡) δn<lR)
+  goal = subst₂ _<_ (sym (u-dyadic-0 n)) (sym lR≡) δn<lR
 
 recipℝ-pos : (x : RealI) (0<x : 0ℝ <ℝ x) →
   0ℝ <ℝ recipℝ x 0<x
@@ -463,10 +462,8 @@ recipℝ'-neg x x<0 = ≈ℝ-refl
 -- l r n = RealI.l (node r n) and u r n = RealI.u (node r n). Unfolding
 -- recipℝ shows that layer t is the reciprocal of the centre of x at
 -- level N₀ + t, widened by δ t:
---
 --   l (recipℝ x 0<x) t = 1/ (centre x (N₀ + t)) + (- δ t)
 --   u (recipℝ x 0<x) t = 1/ (centre x (N₀ + t)) + δ t
---
 -- These are recorded as comments rather than as refl lemmas: the NonZero
 -- instance of 1/ that Recip builds internally is not exported, so a
 -- statement of the equation cannot name the very term the library
@@ -479,3 +476,55 @@ recipℝ'-neg x x<0 = ≈ℝ-refl
 -- 的那一项。下面记录的是层级记账。
 level-at : (x : RealI) (0<x : 0ℝ <ℝ x) → ℕ
 level-at x 0<x = PosCauchy.N₀ (realI→posCauchy x 0<x)
+------------------------------------------------------------------------
+-- Embedding preserves the reciprocal
+--
+-- 嵌入保持倒数
+
+-- a = embedℚ (1/s) and b = recipℝ (embedℚ s) both multiply the embedded
+-- s to one: a * s ≈ embedℚ ((1/s) * s) ≡ 1 and b * s ≈ 1 by the defining
+-- identity of the reciprocal. Regrouping alone then gives a ≈ b, with no
+-- order argument:
+--   a ≈ a * 1 ≈ a * (b * s) ≈ a * (s * b) ≈ (a * s) * b ≈ 1 * b ≈ b.
+--
+-- a = embedℚ (1/s) 与 b = recipℝ (embedℚ s) 与嵌入的 s 相乘都得 1：
+-- a * s ≈ embedℚ ((1/s) * s) ≡ 1，b * s ≈ 1 由倒数的定义恒等式给出
+-- 仅靠重结合即得 a ≈ b，全程不用序：
+--   链条为 a ≈ a * 1 ≈ a * (b * s) ≈ a * (s * b) ≈ (a * s) * b ≈ 1 * b ≈ b。
+embedℚ-recip : (s : ℚ) ⦃ nz : NonZero s ⦄ (0<s : 0ℚ < s)
+             → embedℚ (1/_ s ⦃ nz ⦄) ≈ℝ recipℝ (embedℚ s) (0<embedℚ s 0<s)
+embedℚ-recip s ⦃ nz ⦄ 0<s =
+  let
+    h : 0ℝ <ℝ embedℚ s
+    h = 0<embedℚ s 0<s
+
+    a : RealI
+    a = embedℚ (1/_ s ⦃ nz ⦄)
+
+    b : RealI
+    b = recipℝ (embedℚ s) h
+
+    s0 : RealI
+    s0 = embedℚ s
+
+    h1 : a *ℝ s0 ≈ℝ 1ℝ
+    h1 = ≈ℝ-trans (≈ℝ-sym (embedℚ-* (1/_ s ⦃ nz ⦄) s)) (embedℚ-cong (*-inverseˡ s))
+
+    h2 : b *ℝ s0 ≈ℝ 1ℝ
+    h2 = ≈ℝ-trans (*ℝ-comm b s0) (*ℝ-inverse-pos s0 h)
+  in
+  beginℝ
+    a
+      ≈ℝ⟨ ≈ℝ-sym (*ℝ-identityʳ a) ⟩
+    a *ℝ 1ℝ
+      ≈ℝ⟨ *ℝ-cong ≈ℝ-refl (≈ℝ-sym h2) ⟩
+    a *ℝ (b *ℝ s0)
+      ≈ℝ⟨ *ℝ-cong ≈ℝ-refl (*ℝ-comm b s0) ⟩
+    a *ℝ (s0 *ℝ b)
+      ≈ℝ⟨ ≈ℝ-sym (*ℝ-assoc a s0 b) ⟩
+    (a *ℝ s0) *ℝ b
+      ≈ℝ⟨ *ℝ-cong h1 ≈ℝ-refl ⟩
+    1ℝ *ℝ b
+      ≈ℝ⟨ *ℝ-identityˡ b ⟩
+    b
+  ∎ℝ

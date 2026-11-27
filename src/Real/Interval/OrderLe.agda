@@ -24,16 +24,16 @@ open ≡-Reasoning
 
 open import Base.RationalRing using (neg-involutive)
 open import Real.Interval using (RealI)
-open import Real.Interval.Arith using (_+ℝ_; negℝ; _-ℝ_)
-open import Real.Interval.ArithLaws using (+ℝ-comm)
-open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym)
+open import Real.Interval.Arith using (0ℝ; _+ℝ_; negℝ; _-ℝ_)
+open import Real.Interval.ArithLaws using (+ℝ-comm; +ℝ-identityʳ; negℝ-0ℝ)
+open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym; ≈ℝ-trans)
 open import Real.IntervalEquiv using
   (l; u; centre; width; width-n; centre-l; centre-u; recipPow2)
 open import Real.Interval.Order using (_<ℝ_; <-irrefl; <-trans; <-cotrans)
 open import Real.Interval.OrderComplete.Base using (_≤ℝ_)
 open import Real.Interval.Node using (0≤width-n; centre-add; centre-neg)
 open import Real.Interval.Kit using (≈ℝ-of-rec; ≈ℝ-of-eq)
-open import Real.Interval.OrderLaws using (≈-<-resp; <-sub)
+open import Real.Interval.OrderLaws using (≈-<-resp; <-sub; <-+mono; <-neg)
 open import Real.Interval.Mul using (sub-monoˡ)
 open import Real.Interval.Mul.Order using (≈-<-respʳ)
 open import Real.Interval.Reasoning using (begin≤_; _≤⟨_⟩_; _≤∎)
@@ -130,7 +130,6 @@ neg-diff-flip a b =
 --
 -- 互相非严格序控制的两实数近似相等。证明把中心差界为两层宽度之和，
 -- 而该和随层数几何衰减。
-
 module AntisymAux (x y : RealI)
   (x≤y : x ≤ℝ y) (y≤x : y ≤ℝ x) where
 
@@ -342,3 +341,21 @@ module AntisymAux (x y : RealI)
 ≤ℝ-+-monoˡ {x} {y} {z} x≤y =
   ≤ℝ-resp-≈ (+ℝ-comm x z) (+ℝ-comm y z)
     (≤ℝ-+-mono {x} {y} {z} x≤y)
+
+------------------------------------------------------------------------
+-- Shrinking by a positive quantity
+--
+-- 减去一个正量
+
+-- Subtracting a positive `d` from `x` stays strictly below `x`: the
+-- negativity of `negℝ d` is added on the right of `x < x`, and the two
+-- ends are then brought back to the shapes `x - d` and `x`.
+--
+-- 从 `x` 减去正量 `d` 仍严格低于 `x`：把 `negℝ d` 的负性加到 `x < x`
+-- 的右侧，再把两端摆回 `x - d` 与 `x` 的形状。
+sub-pos-lt : (x d : RealI) → 0ℝ <ℝ d → x -ℝ d <ℝ x
+sub-pos-lt x d 0<d =
+  ≈-<-resp (+ℝ-comm (negℝ d) x)
+    (≈-<-respʳ (≈ℝ-trans (+ℝ-comm 0ℝ x) (+ℝ-identityʳ x))
+      (<-+mono (negℝ d) 0ℝ x
+        (≈-<-respʳ negℝ-0ℝ (<-neg 0ℝ d 0<d))))

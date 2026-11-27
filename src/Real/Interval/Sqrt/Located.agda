@@ -31,12 +31,13 @@ open import Real.Interval.Mul.Laws using (*ℝ-zeroˡ)
 open import Real.Interval.Mul.Order using (u-prod-corner; u-nonNeg; δ-below)
 open import Real.Interval.Node using (l-dyadic)
 open import Real.Interval.Order using (_<ℝ_)
+open import Real.Interval.Rational using (pos-diff; plus-diff)
 open import Real.Interval.OrderComplete.Base using
-  (Subset; Upper; Occupied; Located; _≤ℝ_; a+d≡b)
+  (Subset; Upper; Occupied; Located; _≤ℝ_)
 open import Real.Interval.OrderLe using (≤ℝ-refl; <⇒≤ℝ; <-≤ℝ-trans)
 open import Real.Interval.OrderLaws using (≈-<-resp; width-below-strict)
 open import Real.Interval.Sqrt.Bounds using
-  (sq-widen; decide-below; l-layer-≤; sq-<; sub-pos; sub-lt-swap
+  (sq-widen; decide-below; l-layer-≤; sq-<; sub-lt-swap
   ; sq-gap-pos)
 
 module _ (y : RealI) (0<y : 0ℝ <ℝ y) where
@@ -138,7 +139,7 @@ module _ (y : RealI) (0<y : 0ℝ <ℝ y) where
       -- 下端点 l y K 仍低于 q * q
 
       l+w≡u : l y k + width y k ≡ u y k
-      l+w≡u = a+d≡b (l y k) (u y k)
+      l+w≡u = plus-diff (l y k) (u y k)
 
       lwk<pp+gap : l y k + width y k < p * p + (q * q - p * p)
       lwk<pp+gap =
@@ -148,7 +149,7 @@ module _ (y : RealI) (0<y : 0ℝ <ℝ y) where
           (+-mono-<-≤ wk<gap lyk≤pp)
 
       pp+gap≡q2 : p * p + (q * q - p * p) ≡ q * q
-      pp+gap≡q2 = a+d≡b (p * p) (q * q)
+      pp+gap≡q2 = plus-diff (p * p) (q * q)
 
       uyk<q2 : u y k < q * q
       uyk<q2 =
@@ -233,7 +234,7 @@ module _ (y : RealI) (0<y : 0ℝ <ℝ y) where
       pp<qq = sq-< p q 0≤p p<q
 
       gap>0 : 0ℚ < q * q - p * p
-      gap>0 = sub-pos (p * p) (q * q) pp<qq
+      gap>0 = pos-diff (p * p) (q * q) pp<qq
 
       probe : Σ ℕ (λ j → 0 ≤ℕ j × width y j < q * q - p * p)
       probe = width-below-strict y (q * q - p * p) 0 gap>0

@@ -11,79 +11,69 @@ module Real.Interval.Log.Core where
 open import Data.Empty using (⊥-elim)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
-open import Data.Rational using (ℚ; 0ℚ; 1ℚ; _+_; _<_; _≤_) renaming (-_ to neg)
+open import Data.Rational using (ℚ; 0ℚ; _+_; _<_; _≤_)
 open import Data.Rational.Properties using
-  (≤-refl; ≤-trans; <⇒≤; <-≤-trans; <-trans; <-asym; +-monoʳ-<; +-monoˡ-≤; <-cmp
-  ; +-comm; +-assoc; +-identityˡ; +-identityʳ; +-inverseʳ; neg-antimono-<; ≮⇒≥)
+  (≤-refl; ≤-trans; <⇒≤; <-trans; +-monoʳ-<; <-cmp; +-comm; +-assoc; +-identityˡ
+  ; +-identityʳ; +-inverseʳ; ≮⇒≥)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_])
 open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
 open import Relation.Binary.PropositionalEquality using
   (_≡_; refl; sym; trans; cong; subst; subst₂)
 open import Relation.Nullary using (¬_)
 
-open import Real using (embed; 0<embed; 0<ε; ε; _≈_)
-open import Real.CauchyToInterval using (M)
+open import Real using (embed; 0<embed)
 open import Real.IntervalEquiv using (l; u)
-open import Real.Interval using (RealI; embedℚ; δ; δ-pos)
+open import Real.Interval using (RealI; embedℚ)
 open import Real.Interval.Arith using (1ℝ)
 open import Real.Interval.Continuity using (embedℚ-mono)
 open import Real.Interval.DensityArch using (archimedean)
-open import Base.RationalRing using (0<1)
-open import Real.Interval.Exp.Core using (expPartial; expSeq; expq)
+open import Real.Interval.Exp.Core using (expq)
 open import Real.Interval.Exp.Order using (expq-zero; expq-mono; expq-strict-mono)
-open import Real.Interval.Exp.Step using (expq-u; expq-step-up; M-lower)
+open import Real.Interval.Exp.Step using (expq-step-up; embed≤exp; m<δ+m; neg-δ+m<m)
+open import Real.Interval.Exp.Full using (expq-irr; expq-≤-respʳ)
 open import Real.Interval.Equiv using (_≈ℝ_; ≈ℝ-sym; ≈ℝ-refl)
 open import Real.Interval.Mul.Order using (≈-<-respʳ)
 open import Real.Interval.Node using (l-dyadic; u-dyadic)
 open import Real.Interval.Order as Ord using (_<ℝ_; <-cotrans)
 open import Real.Interval.OrderLe using
-  (<-≤ℝ-trans; ≤ℝ-<trans; ≤ℝ-resp-≈; ≈⇒≤ℝ∧)
+  (<-≤ℝ-trans; ≤ℝ-<trans; ≈⇒≤ℝ∧)
 open import Real.Interval.OrderLaws using (≈-<-resp)
 open import Real.Interval.OrderComplete.Base using
   (Subset; Upper; Occupied; Located; _≤ℝ_)
 open import Real.Interval.OrderComplete using (sup; sup-upper; sup-least)
-open import Real.Interval.RetractCauchy using (cauchy→realI-cong)
 
 ------------------------------------------------------------------------
 -- expq does not depend on the proof of non-negativity
 --
 -- expq 不依赖非负性的证明
 
+-- The monotonicity lemmas below do not mention the base, so they live
+-- outside the parameterised module
 -- For y with 1 < y, log y is the least upper bound of the located set
 --     P x = Σ ℚ (λ q → (0 ≤ q) × (x ≈ embedℚ q) × (expq q < y))
 -- of rational points whose exponential is still below y. Membership is
 -- witnessed by embedℚ 0 and expq 0 ≈ 1 < y. The upper bound is the
 -- image embedℚ m of a natural number m with y < m: a member with
--- r ≥ m would give embedℚ m ≤ embedℚ r ≤ expq r < y < embedℚ m.
+-- r ≥ m would give embedℚ m ≤ embedℚ r ≤ expq r < y < embedℚ m
 --     P x = Σ ℚ (λ q → (0 ≤ q) × (x ≈ embedℚ q) × (expq q < y))
 -- The sequence part is literally the same function; only the modulus
--- differs, so the two Cauchy sequences are metrically equivalent.
--- These lemmas do not mention the base, so they live outside the
--- parameterised module below.
+-- differs. That proof independence is established in the Exp layer, in
+-- Real.Interval.Exp.Full (expSeq-irr and expq-irr), and this module takes
+-- expq-irr from there instead of reproving it.
 --
+-- 下面的单调性引理与底数无关，故放在带参数的模块之外
 -- 对满足 1 < y 的 y，log y 是定位集
 -- 的上确界：成员是那些指数仍在 y 以下的有理点。成员由 embedℚ 0 与
 -- expq 0 ≈ 1 < y 给出。上界取自然数 m（满足 y < m）的像 embedℚ m：
 -- 若有成员满足 r ≥ m，则 embedℚ m ≤ embedℚ r ≤ expq r < y < embedℚ m
--- 矛盾。
--- 序列部分就是同一个函数，只有模数不同，故两条柯西列度量等价。
--- 这些引理与底数无关，因此放在下面带参数的模块之外。
-expSeq-irrel : (q : ℚ) (p p' : 0ℚ ≤ q) → expSeq q p ≈ expSeq q p'
-expSeq-irrel q p p' k = 0 , λ n _ →
-  let c : expPartial q n + neg (expPartial q n) < ε k
-      c = subst (λ z → z < ε k) (sym (+-inverseʳ (expPartial q n))) (0<ε k)
-  in c , c
-
-expq-irrel : (q : ℚ) (p p' : 0ℚ ≤ q) → expq q p ≈ℝ expq q p'
-expq-irrel q p p' = cauchy→realI-cong (expSeq-irrel q p p')
-
--- Monotonicity at arbitrary proofs of non-negativity.
---
--- 任意非负性证明下的单调性。
+-- 矛盾
+-- 序列部分就是同一个函数，只有模数不同。这条证据无关性已在 Exp 层的
+-- Real.Interval.Exp.Full 中证成（expSeq-irr、expq-irr），本模块直接使用
+-- expq-irr，不再重证。
 expq-mono-any : (p q : ℚ) (0≤p : 0ℚ ≤ p) (0≤q : 0ℚ ≤ q)
               → p ≤ q → expq p 0≤p ≤ℝ expq q 0≤q
 expq-mono-any p q 0≤p 0≤q p≤q =
-  ≤ℝ-resp-≈ ≈ℝ-refl (expq-irrel q (≤-trans 0≤p p≤q) 0≤q)
+  expq-≤-respʳ p q 0≤p (≤-trans 0≤p p≤q) 0≤q
     (expq-mono p q 0≤p p≤q)
 
 expq-strict-any : (p q : ℚ) (0≤p : 0ℚ ≤ p) (0≤q : 0ℚ ≤ q)
@@ -92,7 +82,7 @@ expq-strict-any p q 0≤p 0≤q p<q =
   let step : expq p 0≤p <ℝ expq q (≤-trans 0≤p (<⇒≤ p<q))
       step = expq-strict-mono p q 0≤p p<q
       le : expq q (≤-trans 0≤p (<⇒≤ p<q)) ≤ℝ expq q 0≤q
-      le = proj₁ (≈⇒≤ℝ∧ (expq-irrel q (≤-trans 0≤p (<⇒≤ p<q)) 0≤q))
+      le = proj₁ (≈⇒≤ℝ∧ (expq-irr q (≤-trans 0≤p (<⇒≤ p<q)) 0≤q))
   in <-≤ℝ-trans step le
 
 module _ (y : RealI) (1<y : 1ℝ <ℝ y) where
@@ -125,94 +115,6 @@ module _ (y : RealI) (1<y : 1ℝ <ℝ y) where
   ... | tri< lt _ _ = lt
   ... | tri≈ _ eq _ = ⊥-elim (nle (subst (λ z → q ≤ z) (sym eq) ≤-refl))
   ... | tri> _ _ q<r = ⊥-elim (nle (<⇒≤ q<r))
-
-  ----------------------------------------------------------------------
-  -- Arithmetic helpers
-  --
-  -- 算术辅助
-
-  0<1ℚ : 0ℚ < 1ℚ
-  0<1ℚ = 0<1
-
-  neg-δ<0 : (k : ℕ) → neg (δ k) < 0ℚ
-  neg-δ<0 k = neg-antimono-< {0ℚ} {δ k} (δ-pos k)
-
-  m<1+m : (m : ℚ) → m < 1ℚ + m
-  m<1+m m =
-    subst₂ _<_
-      (trans (+-comm m 0ℚ) (+-identityˡ m))
-      (+-comm m 1ℚ)
-      (+-monoʳ-< m 0<1ℚ)
-
-  m<δ+m : (k : ℕ) (m : ℚ) → m < δ k + m
-  m<δ+m k m =
-    subst₂ _<_
-      (+-identityʳ m)
-      (+-comm m (δ k))
-      (+-monoʳ-< m (δ-pos k))
-
-  neg-δ+m<m : (k : ℕ) (m : ℚ) → neg (δ k) + m < m
-  neg-δ+m<m k m =
-    subst₂ _<_
-      (+-comm m (neg (δ k)))
-      (+-identityʳ m)
-      (+-monoʳ-< m (neg-δ<0 k))
-
-  -- (e + (δ + δ)) + neg δ ≡ e + δ.
-  --
-  -- (e + (δ + δ)) + neg δ ≡ e + δ。
-  δ-triple : (e : ℚ) (k : ℕ)
-           → (e + (δ k + δ k)) + neg (δ k) ≡ e + δ k
-  δ-triple e k =
-    trans (+-assoc e (δ k + δ k) (neg (δ k)))
-      (trans (cong (e +_) cancel) refl)
-    where
-    cancel : (δ k + δ k) + neg (δ k) ≡ δ k
-    cancel = trans (+-assoc (δ k) (δ k) (neg (δ k)))
-               (trans (cong (δ k +_) (+-inverseʳ (δ k)))
-                      (+-identityʳ (δ k)))
-
-  ----------------------------------------------------------------------
-  -- embedℚ m ≤ expq m: linear growth read at the level of layers
-  --
-  -- embedℚ m ≤ expq m：逐层的线性增长
-
-  embed≤exp : (m : ℚ) (0≤m : 0ℚ ≤ m) → embedℚ m ≤ℝ expq m 0≤m
-  embed≤exp m 0≤m (k , h) =
-    let
-      Mk : ℕ
-      Mk = M (expSeq m 0≤m) k
-
-      lower : 1ℚ + m ≤ expPartial m Mk + (δ k + δ k)
-      lower = M-lower m 0≤m k
-
-      add-negδ : (1ℚ + m) + neg (δ k)
-               ≤ (expPartial m Mk + (δ k + δ k)) + neg (δ k)
-      add-negδ = +-monoˡ-≤ (neg (δ k)) lower
-
-      lower' : (1ℚ + m) + neg (δ k) ≤ expPartial m Mk + δ k
-      lower' = subst (λ z → (1ℚ + m) + neg (δ k) ≤ z)
-                 (δ-triple (expPartial m Mk) k) add-negδ
-
-      strict : neg (δ k) + m < (1ℚ + m) + neg (δ k)
-      strict = subst (λ z → neg (δ k) + m < z)
-                 (+-comm (neg (δ k)) (1ℚ + m))
-                 (+-monoʳ-< (neg (δ k)) (m<1+m m))
-
-      gt : neg (δ k) + m < expPartial m Mk + δ k
-      gt = <-≤-trans strict lower'
-
-      uP≡ : u (expq m 0≤m) k ≡ expPartial m Mk + δ k
-      uP≡ = expq-u m 0≤m k
-
-      lE : l (embedℚ m) k ≡ neg (δ k) + m
-      lE = l-dyadic m k
-
-      lt : l (embedℚ m) k < u (expq m 0≤m) k
-      lt = subst (λ z → z < u (expq m 0≤m) k) (sym lE)
-             (subst (λ z → neg (δ k) + m < z) (sym uP≡) gt)
-    in
-      <-asym lt h
 
   ----------------------------------------------------------------------
   -- The occupied side: a member strictly above p
